@@ -4,3 +4,5 @@ UserSettings
 Temp
 *.csproj
 *.sln
+obj/Debug
+Logs
