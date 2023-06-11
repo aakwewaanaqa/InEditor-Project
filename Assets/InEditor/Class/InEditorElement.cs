@@ -5,14 +5,16 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine.UIElements;
 using System.Linq;
+using System.Text;
+using System.Collections;
 
 namespace InEditor
 {
     public class InEditorElement : IComparable<InEditorElement>
     {
-        private struct ReflectiveTarget
+        private struct ReflectiveTarget : IByTarget
         {
-            public object RawTarget
+            public object Target
             {
                 get => rawTarget;
             }
@@ -26,11 +28,6 @@ namespace InEditor
             public ReflectiveTarget(object rawTarget)
             {
                 this.rawTarget = rawTarget;
-            }
-
-            public void Retarget(object target)
-            {
-                rawTarget = target;
             }
         }
         private struct ElementHierarchy
@@ -65,7 +62,7 @@ namespace InEditor
         /// <summary>
         /// Instance holding this InEditorMember member.
         /// </summary>
-        private readonly ReflectiveTarget target;
+        private ReflectiveTarget target;
         /// <summary>
         /// Tells the elemets construction.
         /// </summary>
@@ -102,13 +99,6 @@ namespace InEditor
             }
         }
         /// <summary>
-        /// Is it serialized as SerializedProperty?
-        /// </summary>
-        public bool IsSerialized
-        {
-            get => reflect.IsSerialized;
-        }
-        /// <summary>
         /// Creates a member to deal Editor drawing.
         /// </summary>
         /// <param name="object"> the target which holds value </param>
@@ -116,25 +106,16 @@ namespace InEditor
         /// <param name="index"> to sort display </param>
         private InEditorElement(object @object, MemberInfo memberInfo, int index, InEditorElement parent)
         {
+            memberInfo.TryGetAttribute(out inEditor);
+
             this.target = new ReflectiveTarget(@object);
             this.reflect = new ReflectiveInfo(memberInfo);
             this.index = index;
 
-            memberInfo.TryGetAttribute(out inEditor);
-
-            if (reflect.IsClass || reflect.IsStruct)
-            {
-                if (target.IsNull) // This is really dangerous to create default value
-                {
-                    target.Retarget(Activator.CreateInstance(reflect.FieldOrPropertyType));
-                    reflect.SetValue(@object, target.RawTarget);
-                }
-                hierarchy = new ElementHierarchy(parent, Reflect(target.RawTarget, reflect.FieldOrPropertyType));
-            }
+            if (reflect.CanBeInEditorElementParent)
+                hierarchy = new ElementHierarchy(parent, Reflect(reflect.GetValue(target), reflect.FieldOrPropertyType, this));
             else
-            {
-
-            }
+                hierarchy = new ElementHierarchy(parent, null);
         }
 
         /// <summary>
@@ -146,7 +127,7 @@ namespace InEditor
         /// <param name="target"> instance of data </param>
         /// <param name="type"> desired type </param>
         /// <returns></returns>
-        public static IEnumerable<InEditorElement> Reflect(object target, Type type, InEditorElement parent = null)
+        public static IEnumerable<InEditorElement> Reflect(object target, Type type, InEditorElement parent)
         {
             // this [GetMembers()] gets every MemberInfo in the [type]
             var infos = type
@@ -186,9 +167,20 @@ namespace InEditor
         {
             {
                 if (element is BindableElement bindable)
-                    bindable.bindingPath = reflect.Name;
+                {
+                    StringBuilder path = new StringBuilder();
+                    InEditorElement parent = hierarchy.Parent;
+                    while (parent is object)
+                    {
+                        path.Insert(0, $"{parent.reflect.Name}.");
+                        parent = parent.hierarchy.Parent;
+                    }
+                    path.Append(reflect.Name);
+                    bindable.bindingPath = path.ToString();
+                }
             }
 
+            if (!reflect.CanBeSerializedInUnity)
             {
                 // Dealing value grabbing
                 if (element is BaseField<T> b && reflect.CanRead)
@@ -207,6 +199,18 @@ namespace InEditor
             }
         }
         /// <summary>
+        /// Used to assign property if exists, easy for design.....
+        /// </summary>
+        /// <param name="element"> designing element </param>
+        /// <param name="name"> wanted property name </param>
+        private bool TrySetProperty(VisualElement element, string name, object value)
+        {
+            var property = element.GetType().GetProperty(name);
+            if (property is object)
+                property.SetValue(element, value);
+            return property is object;
+        }
+        /// <summary>
         /// Gives you a binded visual element.....
         /// <br>
         /// It was designed not to create VisualElement in ctor by first place,
@@ -216,29 +220,47 @@ namespace InEditor
         /// <returns> the binded element </returns>
         public VisualElement CreateElement()
         {
+            if (target.IsNull)
+                target = new ReflectiveTarget(hierarchy.Parent.reflect.CreateDefault());
+
             VisualElement element = default;
+
             if (reflect.FieldOrPropertyType == typeof(string))
             {
-                element = new TextField(DisplayName);
+                element = new TextField();
             }
             else if (reflect.FieldOrPropertyType == typeof(int))
             {
-                element = new IntegerField(DisplayName);
+                element = new IntegerField();
             }
             else if (reflect.FieldOrPropertyType == typeof(float))
             {
-                element = new FloatField(DisplayName);
+                element = new FloatField();
             }
             else if (reflect.FieldOrPropertyType == typeof(Vector3))
             {
-                element = new Vector3Field(DisplayName);
+                element = new Vector3Field();
             }
-            else if (reflect.IsClass || reflect.IsStruct)
+            else if (reflect.IsIList)
             {
-                element = new VisualElement();
+                element = new ListView((IList)reflect.GetValue(target))
+                {
+                    showBorder = true,
+                    showFoldoutHeader = true,
+                    headerTitle = DisplayName,
+                    showAddRemoveFooter = true,
+                    reorderMode = ListViewReorderMode.Animated, 
+                };
+            }
+            else if (reflect.CanBeInEditorElementParent)
+            {
+                element = new Foldout() { text = DisplayName };
                 foreach (var relative in hierarchy.Relatives)
                     element.Add(relative.CreateElement());
             }
+
+            TrySetProperty(element, "label", DisplayName);
+            element.SetEnabled(reflect.CanWrite);
 
             // magic goes here... we want to invoke [RegisterChangeEvent<T>()] but passing [reflect.MemberType] to be the [<T>]
             // so by using [MakeGenericMethod()] we succeed

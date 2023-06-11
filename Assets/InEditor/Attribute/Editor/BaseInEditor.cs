@@ -24,7 +24,7 @@ namespace InEditor
         protected virtual void OnEnable()
         {
             type = target.GetType();
-            members = InEditorElement.Reflect(target, type);
+            members = InEditorElement.Reflect(target, type, null);
         }
         public override VisualElement CreateInspectorGUI()
         {

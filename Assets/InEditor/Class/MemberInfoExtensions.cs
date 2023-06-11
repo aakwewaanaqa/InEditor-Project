@@ -11,11 +11,6 @@ namespace InEditor
             result = info.GetCustomAttribute<T>();
             return result is object;
         }
-        private static bool TryGetAttribute<T>(this Type type, out T result) where T : Attribute
-        {
-            result = type.GetCustomAttribute<T>();
-            return result is object;
-        }
         public static bool CanBeInEditorElement(this MemberInfo info)
         {
             if (info.TryGetAttribute(out InEditorAttribute _))
@@ -24,6 +19,8 @@ namespace InEditor
                 return true;
             if (info.TryGetAttribute(out SerializeReference _))
                 return true;
+            if (info is Type type)
+                return type.CanBeSerializedInUnity();
             if (info is FieldInfo field)
             {
                 if (!field.IsStatic && field.IsPublic && field.FieldType.CanBeSerializedInUnity())
@@ -31,7 +28,7 @@ namespace InEditor
             }
             return false;
         }
-        private static bool CanBeSerializedInUnity(this Type type)
+        public static bool CanBeSerializedInUnity(this Type type)
         {
             if (type.TryGetAttribute(out SerializableAttribute _))
                 return true;
@@ -49,6 +46,24 @@ namespace InEditor
                 typeof(UnityEngine.Quaternion) == (type) ||
                 typeof(UnityEngine.Color) == (type) ||
                 typeof(UnityEngine.Color32) == (type))
+                return true;
+            return false;
+        }
+        public static bool CanBeParentInEditorElement(this MemberInfo info)
+        {
+            if (info is FieldInfo field)
+                return field.FieldType.CanBeParentInEditorElement();
+            else if (info is PropertyInfo property)
+                return property.PropertyType.CanBeParentInEditorElement();
+            else if (info is Type type)
+                return type.CanBeParentInEditorElement();
+            throw new NotImplementedException();
+        }
+        private static bool CanBeParentInEditorElement(this Type type)
+        {
+            if (type.IsClass)
+                return true;
+            if (type.IsValueType && !type.IsEnum && !type.IsPrimitive)
                 return true;
             return false;
         }

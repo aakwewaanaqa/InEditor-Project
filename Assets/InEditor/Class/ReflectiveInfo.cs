@@ -1,34 +1,47 @@
 ﻿using UnityEngine;
 using System;
 using System.Reflection;
+using System.Collections;
 
 namespace InEditor
 {
-    public class ReflectiveInfo : IGetSet
+    public struct ReflectiveInfo : IGetSet
     {
         public readonly MemberInfo MemberInfo;
         public readonly Type FieldOrPropertyType;
 
-        private readonly SerializeField serializeField;
-
         /// <summary>
-        /// Determines whether the member can be serialized through Unity.
-        /// This affects the way the Editor's behaviour of dealing value changes.
+        /// Determines the type fits the rule to draw as an InEditorMember
         /// </summary>
-        public bool IsSerialized
+        public bool CanBeInEditorElement
         {
             get
             {
-                if (IsField)
-                {
-                    if (Field.IsPublic && !Field.IsStatic && Field.FieldType.IsSerializable)
-                        return true;
-                    else if (serializeField is object && !Field.IsStatic && Field.FieldType.IsSerializable)
-                        return true;
-                }
-                return false;
+                return MemberInfo.CanBeInEditorElement();
             }
         }
+        /// <summary>
+        /// Determines the type will have members inside.
+        /// </summary>
+        public bool CanBeInEditorElementParent
+        {
+            get => MemberInfo.CanBeParentInEditorElement();
+        }
+        /// <summary>
+        /// Tells the type can be serialized by Unity.
+        /// </summary>
+        public bool CanBeSerializedInUnity
+        {
+            get => FieldOrPropertyType.CanBeSerializedInUnity();
+        }
+        /// <summary>
+        /// Tells the type is a array type
+        /// </summary>
+        public bool IsIList
+        {
+            get => typeof(IList).IsAssignableFrom(FieldOrPropertyType);
+        }
+
         /// <summary>
         /// Member's declared name.
         /// </summary>
@@ -63,13 +76,15 @@ namespace InEditor
             {
                 MemberInfo = field;
                 FieldOrPropertyType = field.FieldType;
+                return;
             }
             else if (info is PropertyInfo prop)
             {
                 MemberInfo = prop;
                 FieldOrPropertyType = prop.PropertyType;
+                return;
             }
-            MemberInfo.TryGetAttribute(out serializeField);
+            throw new NotImplementedException();
         }
 
         public bool IsField
@@ -107,6 +122,9 @@ namespace InEditor
         }
         public object GetValue(object target)
         {
+            while (target is IByTarget by)
+                target = by.Target;
+
             if (IsField)
             {
                 return Field.GetValue(target);
@@ -122,6 +140,9 @@ namespace InEditor
         }
         public void SetValue(object target, object value)
         {
+            while (target is IByTarget by)
+                target = by.Target;
+
             if (IsField)
             {
                 Field.SetValue(target, value);
