@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace InEditor
@@ -10,6 +9,17 @@ namespace InEditor
         [InEditor(DisplayOrder = 1)]
         public float Float;
         [InEditor(DisplayOrder = 2)]
-        private string str;
+        public TestClass Class;
+
+        public class TestClass
+        {
+            [InEditor(DisplayOrder = 1)]
+            public int Int;
+        }
+
+        [ContextMenu("Test It")]
+        public void TestIt()
+        {
+        }
     }
 }
