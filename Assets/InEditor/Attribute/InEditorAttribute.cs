@@ -32,5 +32,6 @@ namespace InEditor
         {
             get => !string.IsNullOrEmpty(DisplayName);
         }
+
     }
 }

@@ -16,7 +16,6 @@ namespace InEditor
         [InEditor(DisplayOrder = 4)]
         public string Str { get; }
 
-        [Serializable]
         public class TestClass
         {
             [InEditor(DisplayOrder = 1)]

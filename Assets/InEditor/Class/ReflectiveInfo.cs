@@ -17,7 +17,7 @@ namespace InEditor
         {
             get
             {
-                return MemberInfo.CanBeInEditorElement();
+                return MemberInfo.IsInEditorElement();
             }
         }
         /// <summary>
@@ -25,14 +25,7 @@ namespace InEditor
         /// </summary>
         public bool CanBeInEditorElementParent
         {
-            get => MemberInfo.CanBeParentInEditorElement();
-        }
-        /// <summary>
-        /// Tells the type can be serialized by Unity.
-        /// </summary>
-        public bool CanBeSerializedInUnity
-        {
-            get => FieldOrPropertyType.CanBeSerializedInUnity();
+            get => MemberInfo.IsParentInEditorElement();
         }
         /// <summary>
         /// Tells the type is a array type

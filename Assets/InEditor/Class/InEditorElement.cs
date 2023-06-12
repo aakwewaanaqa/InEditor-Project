@@ -142,7 +142,7 @@ namespace InEditor
                 .GetMembers(
                     BindingFlags.Public | BindingFlags.NonPublic |
                     BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-                .Where(i => i.CanBeInEditorElement());
+                .Where(i => i.IsInEditorElement());
             var members = new List<InEditorElement>();
             foreach (var info in infos)
             {
@@ -199,7 +199,8 @@ namespace InEditor
                     bindable.bindingPath = path.ToString();
                 }
             }
-
+            // Any member that can or cannot be serialized must rely on their declaring type.
+            // It was not fixed yet.....
             if (!reflect.CanBeSerializedInUnity)
             {
                 // Dealing value grabbing
@@ -240,23 +241,7 @@ namespace InEditor
             }
             else
             {
-                if (reflect.FieldOrPropertyType == typeof(string))
-                {
-                    element = new TextField();
-                }
-                else if (reflect.FieldOrPropertyType == typeof(int))
-                {
-                    element = new IntegerField();
-                }
-                else if (reflect.FieldOrPropertyType == typeof(float))
-                {
-                    element = new FloatField();
-                }
-                else if (reflect.FieldOrPropertyType == typeof(Vector3))
-                {
-                    element = new Vector3Field();
-                }
-                else if (reflect.IsIList)
+                if (reflect.IsIList)
                 {
                     element = new ListView((IList)reflect.GetValue(target))
                     {
@@ -266,6 +251,10 @@ namespace InEditor
                         showAddRemoveFooter = true,
                         reorderMode = ListViewReorderMode.Animated,
                     };
+                }
+                else
+                {
+                    element = reflect.FieldOrPropertyType.ToVisualElementField();
                 }
             }
 
