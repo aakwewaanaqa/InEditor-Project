@@ -1,11 +1,20 @@
 ﻿using System;
 using System.Reflection;
+using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace InEditor
 {
     public static class MemberInfoExtensions
     {
+        public static IEnumerable<Type> GetTypesOf<TAttribute>() where TAttribute : Attribute
+        {
+            return AppDomain.CurrentDomain
+                .GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .Where(t => t.TryGetAttribute(out TAttribute _)) ;
+        }
         public static bool TryGetAttribute<T>(this MemberInfo info, out T result) where T : Attribute
         {
             result = info.GetCustomAttribute<T>();

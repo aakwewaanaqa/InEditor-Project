@@ -7,6 +7,7 @@ using UnityEngine.UIElements;
 using System.Linq;
 using System.Text;
 using System.Collections;
+using UnityEditor.UIElements;
 
 namespace InEditor
 {
@@ -79,6 +80,13 @@ namespace InEditor
         public InEditorAttribute InEditor
         {
             get => inEditor;
+        }
+        /// <summary>
+        /// Raw property name
+        /// </summary>
+        public string Name
+        {
+            get => reflect.Name;
         }
         /// <summary>
         /// Nicified display name
@@ -156,6 +164,18 @@ namespace InEditor
         }
 
         /// <summary>
+        /// Used to assign property if exists, easy for design.....
+        /// </summary>
+        /// <param name="element"> designing element </param>
+        /// <param name="name"> wanted property name </param>
+        private bool TrySetProperty(VisualElement element, string name, object value)
+        {
+            var property = element.GetType().GetProperty(name);
+            if (property is object)
+                property.SetValue(element, value);
+            return property is object;
+        }
+        /// <summary>
         /// Used to bind value changed...
         /// <br>
         /// Designed to be reflectivily invoked...
@@ -199,18 +219,6 @@ namespace InEditor
             }
         }
         /// <summary>
-        /// Used to assign property if exists, easy for design.....
-        /// </summary>
-        /// <param name="element"> designing element </param>
-        /// <param name="name"> wanted property name </param>
-        private bool TrySetProperty(VisualElement element, string name, object value)
-        {
-            var property = element.GetType().GetProperty(name);
-            if (property is object)
-                property.SetValue(element, value);
-            return property is object;
-        }
-        /// <summary>
         /// Gives you a binded visual element.....
         /// <br>
         /// It was designed not to create VisualElement in ctor by first place,
@@ -218,45 +226,47 @@ namespace InEditor
         /// </br>
         /// </summary>
         /// <returns> the binded element </returns>
-        public VisualElement CreateElement()
+        public VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
             if (target.IsNull)
                 target = new ReflectiveTarget(hierarchy.Parent.reflect.CreateDefault());
 
             VisualElement element = default;
-
-            if (reflect.FieldOrPropertyType == typeof(string))
-            {
-                element = new TextField();
-            }
-            else if (reflect.FieldOrPropertyType == typeof(int))
-            {
-                element = new IntegerField();
-            }
-            else if (reflect.FieldOrPropertyType == typeof(float))
-            {
-                element = new FloatField();
-            }
-            else if (reflect.FieldOrPropertyType == typeof(Vector3))
-            {
-                element = new Vector3Field();
-            }
-            else if (reflect.IsIList)
-            {
-                element = new ListView((IList)reflect.GetValue(target))
-                {
-                    showBorder = true,
-                    showFoldoutHeader = true,
-                    headerTitle = DisplayName,
-                    showAddRemoveFooter = true,
-                    reorderMode = ListViewReorderMode.Animated, 
-                };
-            }
-            else if (reflect.CanBeInEditorElementParent)
+            if (reflect.CanBeInEditorElementParent)
             {
                 element = new Foldout() { text = DisplayName };
                 foreach (var relative in hierarchy.Relatives)
-                    element.Add(relative.CreateElement());
+                    element.Add(relative.CreatePropertyGUI(null));
+            }
+            else
+            {
+                if (reflect.FieldOrPropertyType == typeof(string))
+                {
+                    element = new TextField();
+                }
+                else if (reflect.FieldOrPropertyType == typeof(int))
+                {
+                    element = new IntegerField();
+                }
+                else if (reflect.FieldOrPropertyType == typeof(float))
+                {
+                    element = new FloatField();
+                }
+                else if (reflect.FieldOrPropertyType == typeof(Vector3))
+                {
+                    element = new Vector3Field();
+                }
+                else if (reflect.IsIList)
+                {
+                    element = new ListView((IList)reflect.GetValue(target))
+                    {
+                        showBorder = true,
+                        showFoldoutHeader = true,
+                        headerTitle = DisplayName,
+                        showAddRemoveFooter = true,
+                        reorderMode = ListViewReorderMode.Animated,
+                    };
+                }
             }
 
             TrySetProperty(element, "label", DisplayName);

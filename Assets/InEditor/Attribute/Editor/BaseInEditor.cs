@@ -30,7 +30,10 @@ namespace InEditor
         {
             VisualElement root = new VisualElement();
             foreach (var member in members)
-                root.Add(member.CreateElement());
+            {
+                var prop = serializedObject.FindProperty(member.Name);
+                root.Add(member.CreatePropertyGUI(prop));
+            }
             return root;
         }
     }

@@ -1,12 +1,15 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 
 namespace InEditor
 {
     /// <summary>
     /// Attribute to mark field, property, method of a Type to create VisualElement at ease...
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class, AllowMultiple = false)]
     public class InEditorAttribute : PropertyAttribute
     {
         /// <summary>
