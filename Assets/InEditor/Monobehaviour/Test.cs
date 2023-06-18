@@ -11,6 +11,9 @@ namespace InEditor
         [NonSerialized]
         private List<int> Ints;
 
+        [InEditor(DisplayOrder = 4)]
+        private TestClass Tested;
+
         public class TestClass
         {
             [InEditor(DisplayOrder = 1)]
