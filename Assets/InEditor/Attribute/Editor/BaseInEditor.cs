@@ -21,17 +21,22 @@ namespace InEditor
         /// Stores all the reflected members.
         /// </summary>
         protected IEnumerable<InEditorElement> members;
+
+        protected VisualElement root;
         protected virtual void OnEnable()
         {
             type = target.GetType();
             members = InEditorElement.Reflect(target, type, null);
         }
+        protected virtual void OnDisable()
+        {
+        }
         public override VisualElement CreateInspectorGUI()
         {
-            VisualElement root = new VisualElement();
+            root = new VisualElement();
             foreach (var member in members)
             {
-                var prop = serializedObject.FindProperty(member.Name);
+                var prop = serializedObject.FindProperty(member.Path);
                 root.Add(member.CreatePropertyGUI(prop));
             }
             return root;

@@ -7,14 +7,9 @@ namespace InEditor
     [AddComponentMenu("InEditor/Test")]
     public class Test : MonoBehaviour
     {
-        [InEditor(DisplayOrder = 1)]
-        public float Float;
-        [InEditor(DisplayOrder = 2)]
-        public TestClass TestedClass;
         [InEditor(DisplayOrder = 3)]
-        public List<int> Ints;
-        [InEditor(DisplayOrder = 4)]
-        public string Str { get; }
+        [NonSerialized]
+        private List<int> Ints;
 
         public class TestClass
         {

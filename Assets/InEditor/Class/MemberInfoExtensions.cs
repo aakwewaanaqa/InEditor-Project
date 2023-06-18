@@ -128,22 +128,14 @@ namespace InEditor
             result = info.GetCustomAttribute<T>();
             return result is object;
         }
+        /// <summary>
+        /// Makes sure the member has InEditorAttribute
+        /// </summary>
+        /// <param name="info"> the memeber to be checked </param>
+        /// <returns> has or hasn't </returns>
         public static bool IsInEditorElement(this MemberInfo info)
         {
-            if (info.TryGetAttribute(out InEditorAttribute _))
-                return true;
-            else if (info.TryGetAttribute(out SerializeField _))
-                return true;
-            else if (info.TryGetAttribute(out SerializeReference _))
-                return true;
-            else if (info is Type type)
-                return type.CanBeSerializedInUnity();
-            else if (info is FieldInfo field)
-            {
-                if (!field.IsStatic && field.IsPublic && field.FieldType.CanBeSerializedInUnity())
-                    return true;
-            }
-            return false;
+            return info.TryGetAttribute(out InEditorAttribute _);
         }
         public static bool IsParentInEditorElement(this MemberInfo info)
         {

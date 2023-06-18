@@ -31,7 +31,7 @@ namespace InEditor
                 this.rawTarget = rawTarget;
             }
         }
-        private struct ElementHierarchy
+        private struct ElementHierarchy 
         {
             public InEditorElement Parent 
             { 
@@ -82,16 +82,9 @@ namespace InEditor
             get => inEditor;
         }
         /// <summary>
-        /// Raw property name
-        /// </summary>
-        public string Name
-        {
-            get => reflect.Name;
-        }
-        /// <summary>
         /// Nicified display name
         /// </summary>
-        public string DisplayName
+        public string NicifiedName
         {
             get
             {
@@ -104,6 +97,20 @@ namespace InEditor
                 {
                     return ObjectNames.NicifyVariableName(reflect.Name);
                 }
+            }
+        }
+        /// <summary>
+        /// Calculated path to elements hierarchy to bind property changes.
+        /// </summary>
+        public string Path
+        {
+            get
+            {
+                StringBuilder build = new StringBuilder();
+                build.Append(reflect.Name);
+                if (hierarchy.Parent is object)
+                    build.Insert(0, $"{hierarchy.Parent.Path}.");
+                return build.ToString();
             }
         }
         /// <summary>
@@ -175,6 +182,7 @@ namespace InEditor
                 property.SetValue(element, value);
             return property is object;
         }
+       
         /// <summary>
         /// Used to bind value changed...
         /// <br>
@@ -183,30 +191,26 @@ namespace InEditor
         /// </summary>
         /// <typeparam name="T"> element's value type </typeparam>
         /// <param name="element"> the drawing element </param>
-        private void RegisterChangeEvent<T>(VisualElement element)
+        private void RegisterChangeEvent<T>(VisualElement element, bool serialized)
         {
+            if (element is BindableElement bindable)
             {
-                if (element is BindableElement bindable)
-                {
-                    StringBuilder path = new StringBuilder();
-                    InEditorElement parent = hierarchy.Parent;
-                    while (parent is object)
-                    {
-                        path.Insert(0, $"{parent.reflect.Name}.");
-                        parent = parent.hierarchy.Parent;
-                    }
-                    path.Append(reflect.Name);
-                    bindable.bindingPath = path.ToString();
-                }
+                bindable.bindingPath = Path;
             }
             // Any member that can or cannot be serialized must rely on their declaring type.
             // It was not fixed yet.....
-            if (!reflect.CanBeSerializedInUnity)
+            if (!serialized)
             {
                 // Dealing value grabbing
                 if (element is BaseField<T> b && reflect.CanRead)
                 {
                     b.value = (T)reflect.GetValue(target);
+                    EventCallback<MouseMoveEvent> d = (e) =>
+                    {
+                        Debug.Log("Recieve");
+                        b.value = (T)reflect.GetValue(target);
+                    };
+                    element.RegisterCallback(d);
                 }
                 // Dealing value setting
                 if (reflect.CanWrite)
@@ -219,6 +223,7 @@ namespace InEditor
                 }
             }
         }
+       
         /// <summary>
         /// Gives you a binded visual element.....
         /// <br>
@@ -235,9 +240,12 @@ namespace InEditor
             VisualElement element = default;
             if (reflect.CanBeInEditorElementParent)
             {
-                element = new Foldout() { text = DisplayName };
+                element = new Foldout() { text = NicifiedName };
                 foreach (var relative in hierarchy.Relatives)
-                    element.Add(relative.CreatePropertyGUI(null));
+                {
+                    prop = prop?.FindPropertyRelative(reflect.Name);
+                    element.Add(relative.CreatePropertyGUI(prop));
+                }
             }
             else
             {
@@ -247,7 +255,7 @@ namespace InEditor
                     {
                         showBorder = true,
                         showFoldoutHeader = true,
-                        headerTitle = DisplayName,
+                        headerTitle = NicifiedName,
                         showAddRemoveFooter = true,
                         reorderMode = ListViewReorderMode.Animated,
                     };
@@ -258,7 +266,7 @@ namespace InEditor
                 }
             }
 
-            TrySetProperty(element, "label", DisplayName);
+            TrySetProperty(element, "label", NicifiedName);
             element.SetEnabled(reflect.CanWrite);
 
             // magic goes here... we want to invoke [RegisterChangeEvent<T>()] but passing [reflect.MemberType] to be the [<T>]
@@ -266,7 +274,7 @@ namespace InEditor
             typeof(InEditorElement)
                 .GetMethod(nameof(RegisterChangeEvent), BindingFlags.NonPublic | BindingFlags.Instance)
                 .MakeGenericMethod(reflect.FieldOrPropertyType)
-                .Invoke(this, new object[1] { element });
+                .Invoke(this, new object[2] { element, prop is object });
 
             return element;
         }

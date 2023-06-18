@@ -9,6 +9,7 @@ namespace InEditor
     {
         public readonly MemberInfo MemberInfo;
         public readonly Type FieldOrPropertyType;
+        public readonly Type[] GenericTypes;
 
         /// <summary>
         /// Determines the type fits the rule to draw as an InEditorMember
@@ -34,7 +35,6 @@ namespace InEditor
         {
             get => typeof(IList).IsAssignableFrom(FieldOrPropertyType);
         }
-
         /// <summary>
         /// Member's declared name.
         /// </summary>
@@ -65,19 +65,21 @@ namespace InEditor
         public ReflectiveInfo(MemberInfo info)
         {
             MemberInfo = info;
-            if (info is FieldInfo field)
+            switch (info)
             {
-                MemberInfo = field;
-                FieldOrPropertyType = field.FieldType;
-                return;
+                case FieldInfo field:
+                    MemberInfo = field;
+                    FieldOrPropertyType = field.FieldType;
+                    GenericTypes = FieldOrPropertyType.GetGenericArguments();
+                    return;
+                case PropertyInfo prop:
+                    MemberInfo = prop;
+                    FieldOrPropertyType = prop.PropertyType;
+                    GenericTypes = FieldOrPropertyType.GetGenericArguments();
+                    return;
+                default:
+                    throw new NotImplementedException();
             }
-            else if (info is PropertyInfo prop)
-            {
-                MemberInfo = prop;
-                FieldOrPropertyType = prop.PropertyType;
-                return;
-            }
-            throw new NotImplementedException();
         }
 
         public bool IsField
@@ -99,14 +101,6 @@ namespace InEditor
         public bool IsEnum
         {
             get => FieldOrPropertyType.IsEnum;
-        }
-        public bool IsClass
-        {
-            get => FieldOrPropertyType.IsClass;
-        }
-        public bool IsStruct
-        {
-            get => FieldOrPropertyType.IsValueType && !IsEnum && !FieldOrPropertyType.IsPrimitive;
         }
 
         public object CreateDefault()
