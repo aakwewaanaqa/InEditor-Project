@@ -24,6 +24,10 @@ namespace InEditor
         /// Marks weather making display name looks nicer by this.
         /// </summary>
         public bool NicifyName = true;
+        /// <summary>
+        /// Marks displaying of the IMGUI to be a certain type.
+        /// </summary>
+        public IMGUIDrawFieldEnum DesignatedIMGUI = IMGUIDrawFieldEnum.Auto;
 
         /// <summary>
         /// If [DisplayName] is not empty or null.

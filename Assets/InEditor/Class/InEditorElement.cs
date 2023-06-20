@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
 using System;
 using System.Reflection;
 using UnityEditor;
@@ -11,8 +10,14 @@ using UnityEditor.UIElements;
 
 namespace InEditor
 {
-    public class InEditorElement : IComparable<InEditorElement>
+    /// <summary>
+    /// It's a super class to deal fields and properties of inspector.
+    /// </summary>
+    public partial class InEditorElement : IComparable<InEditorElement>
     {
+        /// <summary>
+        /// Used to store type informations.
+        /// </summary>
         private struct ReflectiveTarget : IByTarget
         {
             public object Target
@@ -31,6 +36,9 @@ namespace InEditor
                 this.rawTarget = rawTarget;
             }
         }
+        /// <summary>
+        /// Used to store parent and relatives into struct.
+        /// </summary>
         private struct ElementHierarchy 
         {
             public InEditorElement Parent 
@@ -53,21 +61,25 @@ namespace InEditor
         }
 
         /// <summary>
-        /// Attribute that holds the desired way to draw this.
+        /// From the MemberInfo.
         /// </summary>
         private readonly InEditorAttribute inEditor;
         /// <summary>
-        /// FieldInfo or PropertyInfo? It tells.
+        /// Deals reflection infos.
         /// </summary>
         private readonly ReflectiveInfo reflect;
         /// <summary>
-        /// Instance holding this InEditorMember member.
+        /// Deals gets and sets.
         /// </summary>
         private ReflectiveTarget target;
         /// <summary>
-        /// Tells the elemets construction.
+        /// Deals elements hierarchy.
         /// </summary>
         private readonly ElementHierarchy hierarchy;
+        /// <summary>
+        /// Deals imgui drawing.
+        /// </summary>
+        private readonly IMGUIInfo imgui;
 
         /// <summary>
         /// Editor used this to sort.
@@ -113,24 +125,24 @@ namespace InEditor
                 return build.ToString();
             }
         }
+
+
         /// <summary>
-        /// Creates a member to deal Editor drawing.
+        /// Used by [InEditorElement.Reflect]...
         /// </summary>
-        /// <param name="object"> the target which holds value </param>
-        /// <param name="memberInfo"> to bind value </param>
-        /// <param name="index"> to sort display </param>
         private InEditorElement(object @object, MemberInfo memberInfo, int index, InEditorElement parent)
         {
             memberInfo.TryGetAttribute(out inEditor);
 
             this.target = new ReflectiveTarget(@object);
             this.reflect = new ReflectiveInfo(memberInfo);
+            this.imgui = new IMGUIInfo(reflect.FieldOrPropertyType);
             this.index = index;
 
             if (reflect.CanBeInEditorElementParent)
-                hierarchy = new ElementHierarchy(parent, Reflect(reflect.GetValue(target), reflect.FieldOrPropertyType, this));
+                this.hierarchy = new ElementHierarchy(parent, Reflect(reflect.GetValue(target), reflect.FieldOrPropertyType, this));
             else
-                hierarchy = new ElementHierarchy(parent, null);
+                this.hierarchy = new ElementHierarchy(parent, null);
         }
 
         /// <summary>
@@ -171,112 +183,11 @@ namespace InEditor
         }
 
         /// <summary>
-        /// Used to assign property if exists, easy for design.....
+        /// Draws inpectors IMGUI-like
         /// </summary>
-        /// <param name="element"> designing element </param>
-        /// <param name="name"> wanted property name </param>
-        private bool TrySetProperty(VisualElement element, string name, object value)
+        /// <param name="prop"> pass the property to deal with prefab system </param>
+        public void OnInspectorGUI(SerializedProperty prop)
         {
-            var property = element.GetType().GetProperty(name);
-            if (property is object)
-                property.SetValue(element, value);
-            return property is object;
-        }
-       
-        /// <summary>
-        /// Used to bind value changed...
-        /// <br>
-        /// Designed to be reflectivily invoked...
-        /// </br>
-        /// </summary>
-        /// <typeparam name="T"> element's value type </typeparam>
-        /// <param name="element"> the drawing element </param>
-        private void RegisterChangeEvent<T>(VisualElement element, bool serialized)
-        {
-            if (element is BindableElement bindable)
-            {
-                bindable.bindingPath = Path;
-            }
-            // Any member that can or cannot be serialized must rely on their declaring type.
-            // It was not fixed yet.....
-            if (!serialized)
-            {
-                // Dealing value grabbing
-                if (element is BaseField<T> b && reflect.CanRead)
-                {
-                    b.value = (T)reflect.GetValue(target);
-                    EventCallback<MouseMoveEvent> d = (e) =>
-                    {
-                        Debug.Log("Recieve");
-                        b.value = (T)reflect.GetValue(target);
-                    };
-                    element.RegisterCallback(d);
-                }
-                // Dealing value setting
-                if (reflect.CanWrite)
-                {
-                    EventCallback<ChangeEvent<T>> d = (change) =>
-                    {
-                        reflect.SetValue(target, change.newValue);
-                    };
-                    element.RegisterCallback(d);
-                }
-            }
-        }
-       
-        /// <summary>
-        /// Gives you a binded visual element.....
-        /// <br>
-        /// It was designed not to create VisualElement in ctor by first place,
-        /// 'cause we want to choose from drawing Editor-IMGUI or VisualElement.
-        /// </br>
-        /// </summary>
-        /// <returns> the binded element </returns>
-        public VisualElement CreatePropertyGUI(SerializedProperty prop)
-        {
-            if (target.IsNull)
-                target = new ReflectiveTarget(hierarchy.Parent.reflect.CreateDefault());
-
-            VisualElement element = default;
-            if (reflect.CanBeInEditorElementParent)
-            {
-                element = new Foldout() { text = NicifiedName };
-                foreach (var relative in hierarchy.Relatives)
-                {
-                    prop = prop?.FindPropertyRelative(reflect.Name);
-                    element.Add(relative.CreatePropertyGUI(prop));
-                }
-            }
-            else
-            {
-                if (reflect.IsIList)
-                {
-                    element = new ListView((IList)reflect.GetValue(target))
-                    {
-                        showBorder = true,
-                        showFoldoutHeader = true,
-                        headerTitle = NicifiedName,
-                        showAddRemoveFooter = true,
-                        reorderMode = ListViewReorderMode.Animated,
-                    };
-                }
-                else
-                {
-                    element = reflect.FieldOrPropertyType.ToVisualElementField();
-                }
-            }
-
-            TrySetProperty(element, "label", NicifiedName);
-            element.SetEnabled(reflect.CanWrite);
-
-            // magic goes here... we want to invoke [RegisterChangeEvent<T>()] but passing [reflect.MemberType] to be the [<T>]
-            // so by using [MakeGenericMethod()] we succeed
-            typeof(InEditorElement)
-                .GetMethod(nameof(RegisterChangeEvent), BindingFlags.NonPublic | BindingFlags.Instance)
-                .MakeGenericMethod(reflect.FieldOrPropertyType)
-                .Invoke(this, new object[2] { element, prop is object });
-
-            return element;
         }
 
         /// <summary>

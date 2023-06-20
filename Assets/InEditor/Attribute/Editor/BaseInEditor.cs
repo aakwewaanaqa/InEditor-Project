@@ -31,15 +31,9 @@ namespace InEditor
         protected virtual void OnDisable()
         {
         }
-        public override VisualElement CreateInspectorGUI()
+        public override void OnInspectorGUI()
         {
-            root = new VisualElement();
-            foreach (var member in members)
-            {
-                var prop = serializedObject.FindProperty(member.Path);
-                root.Add(member.CreatePropertyGUI(prop));
-            }
-            return root;
+            base.OnInspectorGUI();
         }
     }
 }
