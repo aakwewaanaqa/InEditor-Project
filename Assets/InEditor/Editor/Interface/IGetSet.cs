@@ -3,9 +3,9 @@
     /// <summary>
     /// Acts like FieldInfo or PropertyInfo can set and get.
     /// </summary>
-    public interface IGetSet
+    public interface IGetSet<T>
     {
-        object GetValue(object target);
-        void SetValue(object target, object value);
+        T GetValue(string path);
+        void SetValue(string path, T value);
     }
 }

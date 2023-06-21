@@ -5,7 +5,7 @@ namespace InEditor
 {
     public sealed class IMGUIToggleField : IMGUIField<bool>
     {
-        public override bool Layout(bool value)
+        protected override bool Layout(bool value)
         {
             return GUILayout.Toggle(value, Label);
         }

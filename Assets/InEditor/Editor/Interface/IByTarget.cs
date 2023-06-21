@@ -5,6 +5,7 @@
     /// </summary>
     public interface IByTarget
     {
-        object Target { get; }
+        object rawTarget { get; }
+        object GetTarget();
     }
 }

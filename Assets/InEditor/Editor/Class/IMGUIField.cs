@@ -1,20 +1,15 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace InEditor
 {
-    public partial class InEditorElement
+    public abstract class IMGUIField
     {
-        /// <summary>
-        /// Used to store IMGUI info to draw like.
-        /// </summary>
-        private struct IMGUIInfo
-        {
-            private static List<IFieldMatch> IMGUIPairs
-                => new List<IFieldMatch>()
+        public static readonly Dictionary<Type, Type> IMGUIPairs
+            = new Dictionary<Type, Type>()
             {
-                new IMGUIToggleField(),
+                { typeof(bool), typeof(IMGUIToggleField) }
 
                 //{ typeof(int), IMGUIDrawFieldEnum.Int },
                 //{ typeof(long), IMGUIDrawFieldEnum.Int },
@@ -48,9 +43,13 @@ namespace InEditor
                 //{ typeof(UnityEngine.Object), IMGUIDrawFieldEnum.Object },
             };
 
-            public IMGUIInfo(Type type)
-            {
-            }
+        public abstract Type FieldType { get; }
+        public abstract object RawValue { get; }
+        public abstract void Retarget(object target);
+
+        public static IMGUIField MakeField(object target, MemberInfo member)
+        {
+            throw new NotImplementedException();
         }
     }
 }
