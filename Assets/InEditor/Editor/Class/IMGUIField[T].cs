@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 namespace InEditor
@@ -18,22 +19,52 @@ namespace InEditor
                 rawTarget = target;
             }
             /// <summary>
-            /// 
+            /// Sets through SerializedObject / SerializedProperty / System.Object
             /// </summary>
             /// <param name="path"> the clue of path of serialized data </param>
-            /// <param name="value"></param>
+            /// <param name="value"> passed value </param>
             public void SetValue(IMGUIFieldInfo path, T value)
             {
-                throw new NotImplementedException();
+                if (rawTarget is SerializedObject serializedObject)
+                {
+                    serializedObject.FindProperty(path.member.Name).boxedValue = value;
+                }
+                else if (rawTarget is SerializedProperty property)
+                {
+                    property.boxedValue = value;
+                }
+                else
+                {
+                    if (path.IsField)
+                        path.Field.SetValue(rawTarget, value);
+                    else if (path.IsProperty)
+                        path.Property.SetValue(rawTarget, value);
+                }
             }
             /// <summary>
-            /// 
+            /// Gets from SerializedObject / SerializedProperty / System.Object
             /// </summary>
             /// <param name="path"> the clue of path of serialized data </param>
-            /// <returns></returns>
+            /// <returns> returned value </returns>
             public T GetValue(IMGUIFieldInfo path)
             {
-                throw new NotImplementedException();
+                if (rawTarget is SerializedObject serializedObject)
+                {
+                    return (T)serializedObject.FindProperty(path.member.Name).boxedValue;
+                }
+                else if (rawTarget is SerializedProperty property)
+                {
+                    return (T)property.boxedValue;
+                }
+                else
+                {
+                    if (path.IsField)
+                        return (T)path.Field.GetValue(rawTarget);
+                    else if (path.IsProperty)
+                        return (T)path.Property.GetValue(rawTarget);
+                    else
+                        throw new NotImplementedException();
+                }
             }
         }
         /// <summary>
@@ -47,23 +78,26 @@ namespace InEditor
             {
                 this.member = member;
             }
-
+            public bool IsField
+            {
+                get => member is FieldInfo;
+            }
+            public bool IsProperty
+            {
+                get => member is PropertyInfo;
+            }
             public FieldInfo Field
             {
                 get 
                 {
-                    if (member is FieldInfo field)
-                        return field;
-                    return null;
+                    return member as FieldInfo;
                 }
             }
             public PropertyInfo Property
             {
                 get
                 {
-                    if (member is PropertyInfo property)
-                        return property;
-                    return null;
+                    return member as PropertyInfo;
                 }
             }
             public Type MemberType
@@ -88,7 +122,7 @@ namespace InEditor
         /// </summary>
         public GUIContent Label = new GUIContent(string.Empty);
 
-        public virtual void Layout()
+        public override void Layout()
         {
             SetValue(Layout(GetValue()));
         }

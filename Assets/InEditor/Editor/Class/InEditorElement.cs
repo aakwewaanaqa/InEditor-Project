@@ -15,7 +15,6 @@ namespace InEditor
     /// </summary>
     public partial class InEditorElement : IComparable<InEditorElement>
     {
-
         /// <summary>
         /// From the MemberInfo.
         /// </summary>
@@ -62,6 +61,7 @@ namespace InEditor
                     BindingFlags.Public | BindingFlags.NonPublic |
                     BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy)
                 .Where(i => i.IsInEditorElement());
+            
             var members = new List<InEditorElement>();
             foreach (var info in infos)
             {
@@ -87,6 +87,7 @@ namespace InEditor
         /// </summary>
         public void OnInspectorGUI()
         {
+            imgui.Layout();
         }
 
         /// <summary>

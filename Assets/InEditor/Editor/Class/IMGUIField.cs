@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace InEditor
@@ -46,10 +47,24 @@ namespace InEditor
         public abstract Type FieldType { get; }
         public abstract object RawValue { get; }
         public abstract void Retarget(object target);
+        public abstract void Layout();
 
         public static IMGUIField MakeField(object target, MemberInfo member)
         {
-            throw new NotImplementedException();
+            Type type = null;
+            if (member is FieldInfo field)
+                type = field.FieldType;
+            else if (member is PropertyInfo property)
+                type = property.PropertyType;
+            else
+                throw new NotImplementedException();
+
+            Type imguiType = null;
+            var key = IMGUIPairs.Keys.First(k => k.IsAssignableFrom(type));
+            imguiType = IMGUIPairs[key];
+
+            var imgui = Activator.CreateInstance(imguiType, new object[2] { target, member });
+            return (IMGUIField)imgui;
         }
     }
 }
