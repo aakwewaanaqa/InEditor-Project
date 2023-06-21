@@ -113,7 +113,7 @@ namespace InEditor
         /// <returns> value output </returns>
         protected abstract T Layout(T input);
 
-        public IMGUIField(object target, MemberInfo member)
+        public IMGUIField(object target, MemberInfo member) : base()
         {
             this.target = new FieldTarget(target);
             this.member = new FieldMember(member);
