@@ -26,14 +26,19 @@ namespace InEditor
         protected virtual void OnEnable()
         {
             type = target.GetType();
-            members = InEditorElement.Reflect(target, type, null);
+            members = InEditorElement.Reflect(serializedObject, type, null);
         }
         protected virtual void OnDisable()
         {
         }
         public override void OnInspectorGUI()
         {
-            base.OnInspectorGUI();
+            serializedObject.Update();
+            
+            foreach (var member in members)
+                member.OnInspectorGUI();
+
+            serializedObject.ApplyModifiedProperties();
         }
     }
 }

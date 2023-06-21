@@ -43,10 +43,25 @@ namespace InEditor
 
                 //{ typeof(UnityEngine.Object), IMGUIDrawFieldEnum.Object },
             };
-
+        /// <summary>
+        /// Fields target type.
+        /// </summary>
         public abstract Type FieldType { get; }
+        /// <summary>
+        /// Gets the raw value of this field.
+        /// </summary>
         public abstract object RawValue { get; }
+        /// <summary>
+        /// When target changed, to retarget to the System.Object.
+        /// <br>
+        /// Non-SerializedField will have to use this to deal reference differing...
+        /// </br>
+        /// </summary>
+        /// <param name="target"> passed new target </param>
         public abstract void Retarget(object target);
+        /// <summary>
+        /// Draws field with EditorGUILayout.
+        /// </summary>
         public abstract void Layout();
 
         public static IMGUIField MakeField(object target, MemberInfo member)

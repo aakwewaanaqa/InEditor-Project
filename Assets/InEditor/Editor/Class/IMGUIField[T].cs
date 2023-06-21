@@ -14,10 +14,32 @@ namespace InEditor
         {
             public object rawTarget;
 
+            public bool IsSerialized
+            {
+                get => rawTarget is SerializedObject || rawTarget is SerializedProperty;
+            }
+
             public FieldTarget(object target)
             {
                 rawTarget = target;
             }
+
+            public SerializedProperty Find(IMGUIFieldInfo path)
+            {
+                if (rawTarget is SerializedObject serializedObject)
+                {
+                    return serializedObject.FindProperty(path.member.Name);
+                }
+                else if (rawTarget is SerializedProperty property)
+                {
+                    return property.FindPropertyRelative(path.member.Name);
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+
             /// <summary>
             /// Sets through SerializedObject / SerializedProperty / System.Object
             /// </summary>
@@ -25,13 +47,9 @@ namespace InEditor
             /// <param name="value"> passed value </param>
             public void SetValue(IMGUIFieldInfo path, T value)
             {
-                if (rawTarget is SerializedObject serializedObject)
+                if (IsSerialized)
                 {
-                    serializedObject.FindProperty(path.member.Name).boxedValue = value;
-                }
-                else if (rawTarget is SerializedProperty property)
-                {
-                    property.boxedValue = value;
+                    Find(path).boxedValue = value;
                 }
                 else
                 {
@@ -48,13 +66,9 @@ namespace InEditor
             /// <returns> returned value </returns>
             public T GetValue(IMGUIFieldInfo path)
             {
-                if (rawTarget is SerializedObject serializedObject)
+                if (IsSerialized)
                 {
-                    return (T)serializedObject.FindProperty(path.member.Name).boxedValue;
-                }
-                else if (rawTarget is SerializedProperty property)
-                {
-                    return (T)property.boxedValue;
+                    return (T)Find(path).boxedValue;
                 }
                 else
                 {
@@ -63,7 +77,7 @@ namespace InEditor
                     else if (path.IsProperty)
                         return (T)path.Property.GetValue(rawTarget);
                     else
-                        throw new NotImplementedException();
+                        throw new InvalidOperationException();
                 }
             }
         }
