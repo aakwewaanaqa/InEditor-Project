@@ -7,7 +7,7 @@ namespace InEditor
     public abstract class IMGUIField<T> : IMGUIField
     {
         /// <summary>
-        /// TODO: Set value whether target is SerializedObject, SerializedProperty or raw object...
+        /// TODO: Gets and sets value whether target is SerializedObject, SerializedProperty or raw object...
         /// </summary>
         protected class FieldTarget
         {
@@ -17,24 +17,33 @@ namespace InEditor
             {
                 rawTarget = target;
             }
-
-            public void SetValue(string path, T value)
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="path"> the clue of path of serialized data </param>
+            /// <param name="value"></param>
+            public void SetValue(IMGUIFieldInfo path, T value)
             {
                 throw new NotImplementedException();
             }
-            public T GetValue(string path)
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="path"> the clue of path of serialized data </param>
+            /// <returns></returns>
+            public T GetValue(IMGUIFieldInfo path)
             {
                 throw new NotImplementedException();
             }
         }
         /// <summary>
-        /// Sets value through target.
+        /// Stores informations.
         /// </summary>
-        protected class FieldMember
+        protected class IMGUIFieldInfo
         {
             public MemberInfo member;
 
-            public FieldMember(MemberInfo member)
+            public IMGUIFieldInfo(MemberInfo member)
             {
                 this.member = member;
             }
@@ -69,20 +78,14 @@ namespace InEditor
                     };
                 }
             }
-
-            public T GetValue(FieldTarget getSet)
-            {
-                return getSet.GetValue(member.Name);
-            }
-            public void SetValue(FieldTarget getSet, T value)
-            {
-                getSet.SetValue(member.Name, value);
-            }
         }
 
         private readonly FieldTarget target;
-        private readonly FieldMember member;
+        private readonly IMGUIFieldInfo member;
 
+        /// <summary>
+        /// The drawn label to display in IMGUI field.
+        /// </summary>
         public GUIContent Label = new GUIContent(string.Empty);
 
         public virtual void Layout()
@@ -92,11 +95,11 @@ namespace InEditor
         
         protected void SetValue(T value)
         {
-            member.SetValue(target, value);
+            target.SetValue(member, value);
         }
         protected T GetValue()
         {
-            return member.GetValue(target);
+            return target.GetValue(member);
         }
 
         public override Type FieldType => typeof(T);
@@ -116,7 +119,7 @@ namespace InEditor
         public IMGUIField(object target, MemberInfo member) : base()
         {
             this.target = new FieldTarget(target);
-            this.member = new FieldMember(member);
+            this.member = new IMGUIFieldInfo(member);
         }
     }
 }
