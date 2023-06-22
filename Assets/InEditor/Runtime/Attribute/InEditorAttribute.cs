@@ -1,8 +1,5 @@
 using UnityEngine;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEditor;
 
 namespace InEditor
 {
@@ -10,7 +7,7 @@ namespace InEditor
     /// Attribute to mark field, property, method of a Type to create VisualElement at ease...
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class, AllowMultiple = false)]
-    public class InEditorAttribute : PropertyAttribute
+    public class InEditorAttribute : Attribute
     {
         /// <summary>
         /// Marks displaying order by this.
@@ -28,14 +25,5 @@ namespace InEditor
         /// Marks displaying of the IMGUI to be a certain type.
         /// </summary>
         public IMGUIDrawFieldEnum DesignatedIMGUI = IMGUIDrawFieldEnum.Auto;
-
-        /// <summary>
-        /// If [DisplayName] is not empty or null.
-        /// </summary>
-        public bool IsRenamed
-        {
-            get => !string.IsNullOrEmpty(DisplayName);
-        }
-
     }
 }

@@ -16,9 +16,7 @@ namespace InEditor
         #region Abstract
         /// <summary>
         /// When target changed, to retarget to the System.Object.
-        /// <br>
         /// Non-SerializedField will have to use this to deal reference differing...
-        /// </br>
         /// </summary>
         /// <param name="target"> passed new target </param>
         public abstract void Retarget(object target);
@@ -34,6 +32,11 @@ namespace InEditor
         /// </summary>
         /// <returns></returns>
         public abstract object PassTarget();
+        /// <summary>
+        /// Used in InEditorElement.OnInspectorGUI()
+        /// to get if the property is expanded or not.
+        /// </summary>
+        public abstract bool IsExpended { get; }
         #endregion
 
         #region Instance Fields

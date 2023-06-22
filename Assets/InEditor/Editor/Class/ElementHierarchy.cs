@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 
 namespace InEditor
 {
@@ -7,17 +8,8 @@ namespace InEditor
         /// <summary>
         /// Used to store parent and relatives into struct.
         /// </summary>
-        private class ElementHierarchy 
+        private class ElementHierarchy : IEnumerable<InEditorElement>
         {
-            public InEditorElement Parent 
-            { 
-                get => parent; 
-            }
-            public IEnumerable<InEditorElement> Relatives 
-            { 
-                get => relatives; 
-            }
-
             private readonly InEditorElement parent;
             private readonly IEnumerable<InEditorElement> relatives;
 
@@ -25,6 +17,18 @@ namespace InEditor
             {
                 this.parent = parent;
                 this.relatives = relatives;
+            }
+
+            public bool HasRelatives => relatives is not null;
+
+            public IEnumerator<InEditorElement> GetEnumerator()
+            {
+                return relatives.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return ((IEnumerable)relatives).GetEnumerator();
             }
         }
     }

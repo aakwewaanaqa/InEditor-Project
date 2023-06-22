@@ -27,5 +27,6 @@ namespace InEditor
         {
             return EditorGUILayout.Foldout(value, Label);
         }
+        public override bool IsExpended => GetValue();
     }
 }

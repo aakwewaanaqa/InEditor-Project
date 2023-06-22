@@ -18,10 +18,7 @@ namespace InEditor
         {
             public object rawTarget;
 
-            public bool IsSerialized
-            {
-                get => rawTarget is SerializedObject or SerializedProperty;
-            }
+            public bool IsSerialized => rawTarget is SerializedObject or SerializedProperty;
 
             public FieldTarget(object target)
             {
@@ -118,22 +115,14 @@ namespace InEditor
             {
                 this.member = member;
             }
-            public bool IsField
-            {
-                get => member is FieldInfo;
-            }
-            public bool IsProperty
-            {
-                get => member is PropertyInfo;
-            }
-            public FieldInfo Field
-            {
-                get => member as FieldInfo;
-            }
-            public PropertyInfo Property
-            {
-                get => member as PropertyInfo;
-            }
+            public bool IsField => member is FieldInfo;
+
+            public bool IsProperty => member is PropertyInfo;
+
+            public FieldInfo Field => member as FieldInfo;
+
+            public PropertyInfo Property => member as PropertyInfo;
+
             public Type MemberType
             {
                 get
@@ -200,7 +189,9 @@ namespace InEditor
         {
             this.target.rawTarget = target;
         }
-        
+
+        public override bool IsExpended => false;
+
         /// <summary>
         /// To implement, override it with EditorGUILayout of the field
         /// </summary>
