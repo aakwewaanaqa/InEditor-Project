@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace InEditor
 {
@@ -9,6 +10,17 @@ namespace InEditor
     {
         [InEditor(DisplayOrder = 1)]
         [SerializeField]
-        private bool Boolean;
+        private bool boolean;
+
+        [InEditor(DisplayOrder = 2)] [SerializeField]
+        private Tested tested;
+        
+        [Serializable]
+        private class Tested
+        {
+            [InEditor(DisplayOrder = 1)]
+            [SerializeField]
+            private bool boolean;
+        }
     }
 }

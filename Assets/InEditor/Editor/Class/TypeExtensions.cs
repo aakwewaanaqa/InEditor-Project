@@ -101,15 +101,14 @@ namespace InEditor
         }
         public static bool CanBeParentInEditorElement(this Type type)
         {
+            
             if (typeof(IList).IsAssignableFrom(type))
                 return false;
-            else if (UnitySerializedTypes.Contains(type))
+            if (type.IsPrimitive)
                 return false;
-            else if (type.IsClass)
-                return true;
-            else if (type.IsValueType)
-                return true;
-            return false;
+            if (UnitySerializedTypes.Contains(type))
+                return false;
+            return type.IsClass || type.IsValueType;
         }
     }
 }

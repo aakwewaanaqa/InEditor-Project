@@ -35,12 +35,11 @@ namespace InEditor
         {
             member.TryGetAttribute(out inEditor);
 
-            imgui = IMGUIField.MakeField(target, member);
+            imgui = IMGUIField.MakeField(target, member, inEditor);
 
-            if (member.IsParentInEditorElement())
-                hierarchy = new ElementHierarchy(parent, Reflect(imgui.RawValue, imgui.FieldType, this));
-            else
-                hierarchy = new ElementHierarchy(parent, null);
+            hierarchy = member.IsParentInEditorElement() ? 
+                new ElementHierarchy(parent, Reflect(imgui.PassTarget(), imgui.TargetType, this)) : 
+                new ElementHierarchy(parent, null);
         }
 
         /// <summary>
@@ -67,7 +66,7 @@ namespace InEditor
             {
                 switch (info)
                 {
-                    // we only want field and property.....
+                    // We only want field and property.....
                     // field is like <code> private string str </code>
                     // property is like <code> private string str { get; set; } </code>
                     case FieldInfo:
@@ -83,7 +82,7 @@ namespace InEditor
         }
 
         /// <summary>
-        /// Draws inpectors IMGUI-like
+        /// Draws inspectors IMGUI-like
         /// </summary>
         public void OnInspectorGUI()
         {
@@ -91,7 +90,7 @@ namespace InEditor
         }
 
         /// <summary>
-        /// ICompareable: Used in Sorting or Ordering in list.
+        /// IComparable: Used in Sorting or Ordering in list.
         /// </summary>
         /// <param name="other"> the compared </param>
         /// <returns> sorting clue </returns>

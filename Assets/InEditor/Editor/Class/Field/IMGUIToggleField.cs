@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 namespace InEditor
@@ -9,7 +10,7 @@ namespace InEditor
         public IMGUIToggleField(object target, MemberInfo member) : base(target, member) { }
         protected override bool Layout(bool value)
         {
-            return GUILayout.Toggle(value, Label);
+            return EditorGUILayout.Toggle(Label, value);
         }
     }
 }

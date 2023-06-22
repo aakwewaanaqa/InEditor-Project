@@ -16,17 +16,15 @@ namespace InEditor
         /// <summary>
         /// the inspected target type
         /// </summary>
-        protected Type type;
+        protected Type Type;
         /// <summary>
         /// Stores all the reflected members.
         /// </summary>
-        protected IEnumerable<InEditorElement> members;
-
-        protected VisualElement root;
+        protected IEnumerable<InEditorElement> Members;
         protected virtual void OnEnable()
         {
-            type = target.GetType();
-            members = InEditorElement.Reflect(serializedObject, type, null);
+            Type = target.GetType();
+            Members = InEditorElement.Reflect(serializedObject, Type, null);
         }
         protected virtual void OnDisable()
         {
@@ -35,7 +33,7 @@ namespace InEditor
         {
             serializedObject.Update();
             
-            foreach (var member in members)
+            foreach (var member in Members)
                 member.OnInspectorGUI();
 
             serializedObject.ApplyModifiedProperties();

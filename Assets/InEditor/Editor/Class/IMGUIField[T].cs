@@ -5,10 +5,14 @@ using UnityEngine;
 
 namespace InEditor
 {
+    /// <summary>
+    /// IMGUI Drawing base class of type T.
+    /// </summary>
+    /// <typeparam name="T">the field's dealing type T</typeparam>
     public abstract class IMGUIField<T> : IMGUIField
     {
         /// <summary>
-        /// TODO: Gets and sets value whether target is SerializedObject, SerializedProperty or raw object...
+        /// Gets and sets value whether target is SerializedObject, SerializedProperty or raw object...
         /// </summary>
         protected class FieldTarget
         {
@@ -16,7 +20,7 @@ namespace InEditor
 
             public bool IsSerialized
             {
-                get => rawTarget is SerializedObject || rawTarget is SerializedProperty;
+                get => rawTarget is SerializedObject or SerializedProperty;
             }
 
             public FieldTarget(object target)
@@ -80,9 +84,31 @@ namespace InEditor
                         throw new InvalidOperationException();
                 }
             }
+            /// <summary>
+            /// Gets target for relatives from SerializedObject / SerializedProperty / System.Object
+            /// </summary>
+            /// <param name="path"> the clue of path of serialized data </param>
+            /// <returns> returned target for relatives </returns>
+            /// <exception cref="InvalidOperationException"> not a field or property </exception>
+            public object PassTarget(IMGUIFieldInfo path)
+            {
+                if (IsSerialized)
+                {
+                    return Find(path);
+                }
+                else
+                {
+                    if (path.IsField)
+                        return (T)path.Field.GetValue(rawTarget);
+                    else if (path.IsProperty)
+                        return (T)path.Property.GetValue(rawTarget);
+                    else
+                        throw new InvalidOperationException();
+                }
+            }
         }
         /// <summary>
-        /// Stores informations.
+        /// Stores reflection information.
         /// </summary>
         protected class IMGUIFieldInfo
         {
@@ -102,17 +128,11 @@ namespace InEditor
             }
             public FieldInfo Field
             {
-                get 
-                {
-                    return member as FieldInfo;
-                }
+                get => member as FieldInfo;
             }
             public PropertyInfo Property
             {
-                get
-                {
-                    return member as PropertyInfo;
-                }
+                get => member as PropertyInfo;
             }
             public Type MemberType
             {
@@ -127,44 +147,68 @@ namespace InEditor
                 }
             }
         }
-
-        private readonly FieldTarget target;
-        private readonly IMGUIFieldInfo member;
+        /// <summary>
+        /// Gets and sets value whether target is SerializedObject, SerializedProperty or raw object...
+        /// </summary>
+        protected readonly FieldTarget target;
+        /// <summary>
+        /// Stores reflection information.
+        /// </summary>
+        protected readonly IMGUIFieldInfo member;
 
         /// <summary>
-        /// The drawn label to display in IMGUI field.
+        /// Used in Editor.OnInspectorGUI()
+        /// to draw EditorGUILayout
         /// </summary>
-        public GUIContent Label = new GUIContent(string.Empty);
-
         public override void Layout()
         {
-            SetValue(Layout(GetValue()));
+            using var scope = new EditorGUI.ChangeCheckScope();
+            
+            var value = Layout(GetValue());
+            if (scope.changed)
+                SetValue(value);
         }
-        
-        protected void SetValue(T value)
+        /// <summary>
+        /// Used in Layout()
+        /// to set value with IMGUIFieldInfo via FieldTarget.
+        /// </summary>
+        /// <param name="value">passed value</param>
+        protected virtual void SetValue(T value)
         {
             target.SetValue(member, value);
         }
-        protected T GetValue()
+        /// <summary>
+        /// Used in Layout()
+        /// to get value with IMGUIFieldInfo via FieldTarget.
+        /// </summary>
+        protected virtual T GetValue()
         {
             return target.GetValue(member);
         }
 
-        public override Type FieldType => typeof(T);
-        public override object RawValue => GetValue();
+        /// <summary>
+        /// Used in InEditorElement.ctor.Reflect()
+        /// to pass down target for relatives
+        /// </summary>
+        /// <returns> the target for relatives </returns>
+        public override object PassTarget()
+        {
+            return target.PassTarget(member);
+        }
+
         public override void Retarget(object target)
         {
             this.target.rawTarget = target;
         }
-
+        
         /// <summary>
-        /// To implement, override it with GUILayout of the field
+        /// To implement, override it with EditorGUILayout of the field
         /// </summary>
         /// <param name="input"> value input </param>
         /// <returns> value output </returns>
         protected abstract T Layout(T input);
 
-        public IMGUIField(object target, MemberInfo member) : base()
+        protected IMGUIField(object target, MemberInfo member) : base()
         {
             this.target = new FieldTarget(target);
             this.member = new IMGUIFieldInfo(member);
