@@ -79,7 +79,8 @@ namespace InEditor
             {
                 if (isPropertyPath)
                     return Find(path);
-
+                
+                //TODO: Sets created instance back to rawTarget please.
                 var obj = rawTarget switch
                 {
                     SerializedObject serializedObject => serializedObject.targetObject,
