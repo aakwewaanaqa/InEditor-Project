@@ -2,6 +2,7 @@
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace InEditor
 {
@@ -17,8 +18,6 @@ namespace InEditor
         protected class FieldTarget
         {
             public object rawTarget;
-
-            public bool IsSerialized => rawTarget is SerializedObject or SerializedProperty;
 
             public FieldTarget(object target)
             {
@@ -46,9 +45,9 @@ namespace InEditor
             /// </summary>
             /// <param name="path"> the clue of path of serialized data </param>
             /// <param name="value"> passed value </param>
-            public void SetValue(IMGUIFieldInfo path, T value)
+            public void SetValue(IMGUIFieldInfo path, T value, bool isSerializedProperty)
             {
-                if (IsSerialized)
+                if (isSerializedProperty)
                 {
                     Find(path).boxedValue = value;
                 }
@@ -60,14 +59,15 @@ namespace InEditor
                         path.Property.SetValue(rawTarget, value);
                 }
             }
+
             /// <summary>
             /// Gets from SerializedObject / SerializedProperty / System.Object
             /// </summary>
             /// <param name="path"> the clue of path of serialized data </param>
             /// <returns> returned value </returns>
-            public T GetValue(IMGUIFieldInfo path)
+            public T GetValue(IMGUIFieldInfo path, bool isSerializedProperty)
             {
-                if (IsSerialized)
+                if (isSerializedProperty)
                 {
                     return (T)Find(path).boxedValue;
                 }
@@ -81,29 +81,59 @@ namespace InEditor
                         throw new InvalidOperationException();
                 }
             }
+
             /// <summary>
             /// Gets target for relatives from SerializedObject / SerializedProperty / System.Object
             /// </summary>
             /// <param name="path"> the clue of path of serialized data </param>
+            /// <param name="isPropertyPath"> relatives control this to get property or not </param>
             /// <returns> returned target for relatives </returns>
             /// <exception cref="InvalidOperationException"> not a field or property </exception>
-            public object PassTarget(IMGUIFieldInfo path)
+            public object PassTarget(IMGUIFieldInfo path, bool isPropertyPath)
             {
-                if (IsSerialized)
+                if (isPropertyPath)
                 {
                     return Find(path);
                 }
                 else
                 {
+                    var obj = rawTarget switch
+                    {
+                        SerializedObject serializedObject => serializedObject.targetObject,
+                        SerializedProperty serializedProperty => serializedProperty.boxedValue,
+                        _ => rawTarget,
+                    };
+
+                    object value = null;
                     if (path.IsField)
-                        return (T)path.Field.GetValue(rawTarget);
+                    {
+                        value = path.Field.GetValue(obj);
+                    }
                     else if (path.IsProperty)
-                        return (T)path.Property.GetValue(rawTarget);
-                    else
-                        throw new InvalidOperationException();
+                    {
+                        value = path.Property.GetValue(obj);
+                    }
+
+                    if (value is null)
+                    {
+                        value = Activator.CreateInstance(path.MemberType);
+                        return value;
+                    }
+
+                    return value;
                 }
             }
+
+            /// <summary>
+            /// Creates default value of the 
+            /// </summary>
+            /// <returns></returns>
+            public object CreateDefault(IMGUIFieldInfo path)
+            {
+                return Activator.CreateInstance(path.MemberType);
+            }
         }
+
         /// <summary>
         /// Stores reflection information.
         /// </summary>
@@ -115,13 +145,26 @@ namespace InEditor
             {
                 this.member = member;
             }
-            public bool IsField => member is FieldInfo;
 
-            public bool IsProperty => member is PropertyInfo;
+            public bool IsField
+            {
+                get => member is FieldInfo;
+            }
 
-            public FieldInfo Field => member as FieldInfo;
+            public bool IsProperty
+            {
+                get => member is PropertyInfo;
+            }
 
-            public PropertyInfo Property => member as PropertyInfo;
+            public FieldInfo Field
+            {
+                get => member as FieldInfo;
+            }
+
+            public PropertyInfo Property
+            {
+                get => member as PropertyInfo;
+            }
 
             public Type MemberType
             {
@@ -136,10 +179,12 @@ namespace InEditor
                 }
             }
         }
+
         /// <summary>
         /// Gets and sets value whether target is SerializedObject, SerializedProperty or raw object...
         /// </summary>
         protected readonly FieldTarget target;
+
         /// <summary>
         /// Stores reflection information.
         /// </summary>
@@ -152,11 +197,12 @@ namespace InEditor
         public override void Layout()
         {
             using var scope = new EditorGUI.ChangeCheckScope();
-            
+
             var value = Layout(GetValue());
             if (scope.changed)
                 SetValue(value);
         }
+
         /// <summary>
         /// Used in Layout()
         /// to set value with IMGUIFieldInfo via FieldTarget.
@@ -164,15 +210,16 @@ namespace InEditor
         /// <param name="value">passed value</param>
         protected virtual void SetValue(T value)
         {
-            target.SetValue(member, value);
+            target.SetValue(member, value, IsSerializedProperty);
         }
+
         /// <summary>
         /// Used in Layout()
         /// to get value with IMGUIFieldInfo via FieldTarget.
         /// </summary>
         protected virtual T GetValue()
         {
-            return target.GetValue(member);
+            return target.GetValue(member, IsSerializedProperty);
         }
 
         /// <summary>
@@ -182,7 +229,7 @@ namespace InEditor
         /// <returns> the target for relatives </returns>
         public override object PassTarget()
         {
-            return target.PassTarget(member);
+            return target.PassTarget(member, IsSerializedProperty);
         }
 
         public override void Retarget(object target)
@@ -190,7 +237,10 @@ namespace InEditor
             this.target.rawTarget = target;
         }
 
-        public override bool IsExpended => false;
+        public override bool IsExpended
+        {
+            get => false;
+        }
 
         /// <summary>
         /// To implement, override it with EditorGUILayout of the field

@@ -28,6 +28,21 @@ namespace InEditor
         {
             return info.TryGetAttribute(out InEditorAttribute _);
         }
+        /// <summary>
+        /// Gets type of the MemberInfo conveniently.
+        /// </summary>
+        /// <param name="info">passed MemberInfo</param>
+        /// <returns>field or property type</returns>
+        public static Type GetFieldOrPropertyType(this MemberInfo info)
+        {
+            return info switch
+            {
+                FieldInfo fieldInfo => fieldInfo.FieldType,
+                PropertyInfo propertyInfo => propertyInfo.PropertyType,
+                Type type => type,
+                _ => throw new InvalidOperationException()
+            };
+        }
         public static bool IsParentInEditorElement(this MemberInfo info)
         {
             return info switch
@@ -35,7 +50,7 @@ namespace InEditor
                 FieldInfo field => field.FieldType.CanBeParentInEditorElement(),
                 PropertyInfo property => property.PropertyType.CanBeParentInEditorElement(),
                 Type type => type.CanBeParentInEditorElement(),
-                _ => throw new NotImplementedException()
+                _ => throw new InvalidOperationException()
             };
         }
     }

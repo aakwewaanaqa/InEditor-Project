@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEditor;
 
 namespace InEditor
 {
@@ -25,12 +26,19 @@ namespace InEditor
         /// </summary>
         private readonly InEditorAttribute inEditor;
 
-        /// <summary>
-        ///     Used by [InEditorElement.Reflect]...
-        /// </summary>
         private InEditorElement(object target, MemberInfo member, InEditorElement parent)
         {
             member.TryGetAttribute(out inEditor);
+
+            var memberType = member.GetFieldOrPropertyType();
+            // var type = member.GetFieldOrPropertyType();
+            // var isParent = member.IsParentInEditorElement();
+            // var isObject = typeof(UnityEngine.Object).IsAssignableFrom(type);    
+            // var isSerialized = target is SerializedObject or SerializedProperty;
+            //
+            // target = isParent && !isObject && !isSerialized && target is null
+            //     ? Activator.CreateInstance(type)
+            //     : target;
 
             imgui = IMGUIField.MakeField(target, member, inEditor);
 

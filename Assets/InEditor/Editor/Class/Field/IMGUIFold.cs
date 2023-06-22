@@ -1,5 +1,6 @@
 using System.Reflection;
 using UnityEditor;
+using UnityEngine;
 
 namespace InEditor
 {
@@ -9,24 +10,32 @@ namespace InEditor
         /// When the target is not serialized, store temporary data here.
         /// </summary>
         private bool fold;
-        
-        public IMGUIFold(object target, MemberInfo member) : base(target, member) { }
+
+        public IMGUIFold(object target, MemberInfo member) : base(target, member)
+        {
+        }
 
         protected override bool GetValue()
         {
-            return target.IsSerialized ? target.Find(member).isExpanded : fold;
+            return IsSerializedProperty ? target.Find(member).isExpanded : fold;
         }
+
         protected override void SetValue(bool value)
         {
-            if (target.IsSerialized)
+            if (IsSerializedProperty)
                 target.Find(member).isExpanded = value;
             else
                 fold = value;
         }
+
         protected override bool Layout(bool value)
         {
             return EditorGUILayout.Foldout(value, Label);
         }
-        public override bool IsExpended => GetValue();
+
+        public override bool IsExpended
+        {
+            get => GetValue();
+        }
     }
 }

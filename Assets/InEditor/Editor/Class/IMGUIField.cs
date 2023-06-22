@@ -43,11 +43,15 @@ namespace InEditor
         /// <summary>
         /// The type that this IMGUIField is tracking and dealing.
         /// </summary>
-        public Type TargetType;
+        public Type TargetType { get; private set; }
         /// <summary>
         /// The drawn label to display in IMGUI field.
         /// </summary>
-        public GUIContent Label;
+        public GUIContent Label { get; private set; }
+        /// <summary>
+        /// Makes sure its a serialized property for getting and setting value.
+        /// </summary>
+        public bool IsSerializedProperty { get; private set; }
         #endregion
 
         #region public static MakeField()
@@ -93,6 +97,15 @@ namespace InEditor
             var content = string.IsNullOrEmpty(name) ? member.Name : name;
             content = inEditor.NicifyName ? ObjectNames.NicifyVariableName(content) : content;
             imgui.Label = new GUIContent(content);
+            
+            imgui.IsSerializedProperty = target switch
+            {
+                SerializedObject serializedObject =>
+                    serializedObject.FindProperty(member.Name) is not null,
+                SerializedProperty serializedProperty =>
+                    serializedProperty.FindPropertyRelative(member.Name) is not null,
+                _ => false
+            };
             
             return imgui;
         }

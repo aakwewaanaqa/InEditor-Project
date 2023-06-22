@@ -1,10 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using InEditor.Runtime.Interface;
 using UnityEditor;
-using UnityEditor.UIElements;
-using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace InEditor
 {
@@ -14,28 +12,40 @@ namespace InEditor
     public class BaseInEditor : Editor
     {
         /// <summary>
-        /// the inspected target type
+        /// The inspected target type
         /// </summary>
-        protected Type Type;
+        private Type type;
+
+        /// <summary>
+        /// Stores attributes of 
+        /// </summary>
+        private IEnumerable<IOnInspectorGUIEditor> onInspectorGUIEditors;
+
         /// <summary>
         /// Stores all the reflected members.
         /// </summary>
         protected IEnumerable<InEditorElement> Members;
+
         protected virtual void OnEnable()
         {
-            Type = target.GetType();
-            Members = InEditorElement.Reflect(serializedObject, Type, null);
-        }
-        protected virtual void OnDisable()
-        {
+            // Gets the target type.
+            type = target.GetType();
+            // Gets attributes that is IOnInspectorGUI.
+            onInspectorGUIEditors = type.GetCustomAttributes(false).OfType<IOnInspectorGUIEditor>();
+            // Reflects all the fields and properties in the target's type.
+            Members = InEditorElement.Reflect(serializedObject, type, null);
         }
         public override void OnInspectorGUI()
         {
+            // Updates all SerializedProperty.
             serializedObject.Update();
-            
+            // Draws all the member of InEditorElement.
             foreach (var member in Members)
                 member.OnInspectorGUI();
-
+            // Executes all the attributes that bound to this target class.
+            foreach (var attribute in onInspectorGUIEditors)
+                attribute.OnInspectorGUI(this);
+            // Apply changes that happens on any SerializedProperty.
             serializedObject.ApplyModifiedProperties();
         }
     }
