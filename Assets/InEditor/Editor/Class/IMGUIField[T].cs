@@ -24,20 +24,20 @@ namespace InEditor
                 rawTarget = target;
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="path"></param>
+            /// <returns></returns>
+            /// <exception cref="InvalidOperationException"></exception>
             public SerializedProperty Find(IMGUIFieldInfo path)
             {
-                if (rawTarget is SerializedObject serializedObject)
+                return rawTarget switch
                 {
-                    return serializedObject.FindProperty(path.member.Name);
-                }
-                else if (rawTarget is SerializedProperty property)
-                {
-                    return property.FindPropertyRelative(path.member.Name);
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
+                    SerializedObject serializedObject => serializedObject.FindProperty(path.member.Name),
+                    SerializedProperty property => property.FindPropertyRelative(path.member.Name),
+                    _ => throw new InvalidOperationException()
+                };
             }
 
             /// <summary>
@@ -45,41 +45,27 @@ namespace InEditor
             /// </summary>
             /// <param name="path"> the clue of path of serialized data </param>
             /// <param name="value"> passed value </param>
+            /// <param name="isSerializedProperty"> the clue of whether field is getting value via path </param>
             public void SetValue(IMGUIFieldInfo path, T value, bool isSerializedProperty)
             {
                 if (isSerializedProperty)
-                {
                     Find(path).boxedValue = value;
-                }
                 else
-                {
-                    if (path.IsField)
-                        path.Field.SetValue(rawTarget, value);
-                    else if (path.IsProperty)
-                        path.Property.SetValue(rawTarget, value);
-                }
+                    path.SetValue(rawTarget, value);
             }
 
             /// <summary>
             /// Gets from SerializedObject / SerializedProperty / System.Object
             /// </summary>
             /// <param name="path"> the clue of path of serialized data </param>
+            /// <param name="isSerializedProperty"> the clue of whether field is getting value via path </param>
             /// <returns> returned value </returns>
             public T GetValue(IMGUIFieldInfo path, bool isSerializedProperty)
             {
                 if (isSerializedProperty)
-                {
                     return (T)Find(path).boxedValue;
-                }
                 else
-                {
-                    if (path.IsField)
-                        return (T)path.Field.GetValue(rawTarget);
-                    else if (path.IsProperty)
-                        return (T)path.Property.GetValue(rawTarget);
-                    else
-                        throw new InvalidOperationException();
-                }
+                    return (T)path.GetValue(rawTarget);
             }
 
             /// <summary>
@@ -92,50 +78,20 @@ namespace InEditor
             public object PassTarget(IMGUIFieldInfo path, bool isPropertyPath)
             {
                 if (isPropertyPath)
-                {
                     return Find(path);
-                }
-                else
+
+                var obj = rawTarget switch
                 {
-                    var obj = rawTarget switch
-                    {
-                        SerializedObject serializedObject => serializedObject.targetObject,
-                        SerializedProperty serializedProperty => serializedProperty.boxedValue,
-                        _ => rawTarget,
-                    };
-
-                    object value = null;
-                    if (path.IsField)
-                    {
-                        value = path.Field.GetValue(obj);
-                    }
-                    else if (path.IsProperty)
-                    {
-                        value = path.Property.GetValue(obj);
-                    }
-
-                    if (value is null)
-                    {
-                        value = Activator.CreateInstance(path.MemberType);
-                        return value;
-                    }
-
-                    return value;
-                }
-            }
-
-            /// <summary>
-            /// Creates default value of the 
-            /// </summary>
-            /// <returns></returns>
-            public object CreateDefault(IMGUIFieldInfo path)
-            {
-                return Activator.CreateInstance(path.MemberType);
+                    SerializedObject serializedObject => serializedObject.targetObject,
+                    SerializedProperty serializedProperty => serializedProperty.boxedValue,
+                    _ => rawTarget,
+                };
+                return path.GetValue(obj) ?? Activator.CreateInstance(path.MemberType);
             }
         }
 
         /// <summary>
-        /// Stores reflection information.
+        /// Stores reflection information, avoiding asking its MemberType.
         /// </summary>
         protected class IMGUIFieldInfo
         {
@@ -146,36 +102,41 @@ namespace InEditor
                 this.member = member;
             }
 
-            public bool IsField
-            {
-                get => member is FieldInfo;
-            }
-
-            public bool IsProperty
-            {
-                get => member is PropertyInfo;
-            }
-
-            public FieldInfo Field
-            {
-                get => member as FieldInfo;
-            }
-
-            public PropertyInfo Property
-            {
-                get => member as PropertyInfo;
-            }
-
             public Type MemberType
             {
                 get
                 {
-                    return member.MemberType switch
+                    return member switch
                     {
-                        MemberTypes.Field => Field.FieldType,
-                        MemberTypes.Property => Property.PropertyType,
+                        FieldInfo fieldInfo => fieldInfo.FieldType,
+                        PropertyInfo propertyInfo => propertyInfo.PropertyType,
                         _ => throw new InvalidOperationException(),
                     };
+                }
+            }
+
+            public object GetValue(object target)
+            {
+                return member switch
+                {
+                    FieldInfo fieldInfo => fieldInfo.GetValue(target),
+                    PropertyInfo propertyInfo => propertyInfo.GetValue(target),
+                    _ => throw new InvalidOperationException(),
+                };
+            }
+
+            public void SetValue(object target, object value)
+            {
+                switch (member)
+                {
+                    case FieldInfo fieldInfo:
+                        fieldInfo.SetValue(target, value);
+                        break;
+                    case PropertyInfo propertyInfo:
+                        propertyInfo.SetValue(target, value);
+                        break;
+                    default:
+                        throw new InvalidOperationException();
                 }
             }
         }
