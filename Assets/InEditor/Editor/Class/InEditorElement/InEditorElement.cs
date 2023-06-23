@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEngine;
 
 namespace InEditor
 {
@@ -25,25 +26,23 @@ namespace InEditor
         ///     From the MemberInfo.
         /// </summary>
         private readonly InEditorAttribute inEditor;
-
-        private InEditorElement(object target, MemberInfo member, InEditorElement parent)
+        
+        private InEditorElement(object rawTarget, MemberInfo member, InEditorElement parent)
         {
             member.TryGetAttribute(out inEditor);
-
-            var memberType = member.GetFieldOrPropertyType();
-            // var type = member.GetFieldOrPropertyType();
-            // var isParent = member.IsParentInEditorElement();
-            // var isObject = typeof(UnityEngine.Object).IsAssignableFrom(type);    
-            // var isSerialized = target is SerializedObject or SerializedProperty;
-            //
-            // target = isParent && !isObject && !isSerialized && target is null
-            //     ? Activator.CreateInstance(type)
-            //     : target;
-
-            imgui = IMGUIField.MakeField(target, member, inEditor);
-
+            
+            var target = new HandledMemberTarget(rawTarget, member);
+            target.NullCheck();
+            
+            var name = inEditor.DisplayName;
+            var content = string.IsNullOrEmpty(name) ? target.Name : name;
+            content = inEditor.NicifyName ? ObjectNames.NicifyVariableName(content) : content;
+            var guiContent = new GUIContent(content);
+            
+            imgui = IMGUIField.CreateIMGUI(target, guiContent);
+            
             hierarchy = member.IsParentInEditorElement()
-                ? new ElementHierarchy(parent, Reflect(imgui.PassTarget(), imgui.TargetType, this))
+                ? new ElementHierarchy(parent, Reflect(target.PassDown(), target.MemberType, this))
                 : new ElementHierarchy(parent, null);
         }
 
@@ -71,7 +70,7 @@ namespace InEditor
                 .GetMembers(
                     BindingFlags.Public | BindingFlags.NonPublic |
                     BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-                .Where(i => i.IsInEditorElement());
+                .Where(i => i.TryGetAttribute(out InEditorAttribute _));
 
             var members = new List<InEditorElement>();
             foreach (var info in infos)
@@ -96,9 +95,14 @@ namespace InEditor
         public void OnInspectorGUI()
         {
             imgui.Layout();
+            
+            EditorGUI.indentLevel++;
+            
             if (imgui.IsExpended && hierarchy.HasRelatives)
                 foreach (var relative in hierarchy)
-                    relative.imgui.Layout();
+                    relative.OnInspectorGUI();
+            
+            EditorGUI.indentLevel--;
         }
     }
 }

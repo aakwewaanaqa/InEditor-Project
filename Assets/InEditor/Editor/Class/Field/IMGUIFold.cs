@@ -11,19 +11,15 @@ namespace InEditor
         /// </summary>
         private bool fold;
 
-        public IMGUIFold(object target, MemberInfo member) : base(target, member)
-        {
-        }
-
         protected override bool GetValue()
         {
-            return IsSerializedProperty ? target.Find(member).isExpanded : fold;
+            return Target.IsMemberSerializedProperty ? Target.FindProperty().isExpanded : fold;
         }
 
         protected override void SetValue(bool value)
         {
-            if (IsSerializedProperty)
-                target.Find(member).isExpanded = value;
+            if (Target.IsMemberSerializedProperty)
+                Target.FindProperty().isExpanded = value;
             else
                 fold = value;
         }
