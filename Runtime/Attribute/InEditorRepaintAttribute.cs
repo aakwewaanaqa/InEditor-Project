@@ -12,10 +12,12 @@ namespace InEditor
         /// </summary>
         public bool PlayingRepaint;
         
-        public void OnInspectorGUI(Editor editor)
+#if UNITY_EDITOR
+        public void OnInspectorGUI(object editor)
         {
             if (PlayingRepaint && EditorApplication.isPlaying)
-                editor.Repaint();
+                (editor as Editor).Repaint();
         }
+#endif
     }
 }

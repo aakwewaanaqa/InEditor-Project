@@ -1,5 +1,3 @@
-using UnityEditor;
-
 namespace InEditor.Runtime.Interface
 {
     /// <summary>
@@ -7,10 +5,12 @@ namespace InEditor.Runtime.Interface
     /// </summary>
     public interface IOnInspectorGUIEditor
     {
+#if UNITY_EDITOR
         /// <summary>
         /// To implement the OnInspectorGUI function for its Editor
         /// </summary>
         /// <param name="editor">passed Editor</param>
-        void OnInspectorGUI(Editor editor);
+        void OnInspectorGUI(object editor);
+#endif
     }
 }
