@@ -1,0 +1,11 @@
+{
+  "name": "com.ineditor",
+  "version": "1.0.0",
+  "displayName": "InEditorAttribute",
+  "description": "A package to make Editor implementation work easily",
+  "unity": "2022.1.3f.1",
+  "author": 
+  {
+    "name": "Ponito / Aakwewaanaqa"
+  }
+}
