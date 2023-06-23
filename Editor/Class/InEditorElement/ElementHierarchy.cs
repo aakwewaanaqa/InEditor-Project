@@ -19,7 +19,10 @@ namespace InEditor
                 this.relatives = relatives;
             }
 
-            public bool HasRelatives => relatives is not null;
+            public bool HasRelatives
+            {
+                get { return relatives is not null; }
+            }
 
             public IEnumerator<InEditorElement> GetEnumerator()
             {

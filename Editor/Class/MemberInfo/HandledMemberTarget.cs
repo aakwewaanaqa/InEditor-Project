@@ -6,20 +6,34 @@ namespace InEditor
 {
     public class HandledMemberTarget
     {
+        /// <summary>
+        /// Handles MemberInfo whether its a FieldInfo or PropertyInfo.
+        /// </summary>
         private class HandledMemberInfo
         {
+            /// <summary>
+            /// Stored reflection info.
+            /// </summary>
             private readonly MemberInfo member;
-
+            /// <summary>
+            /// Name of the MemberInfo.
+            /// </summary>
             public string Name
             {
-                get => member.Name;
+                get { return member.Name; }
             }
-
+            /// <summary>
+            /// Creates a handled MemberInfo for later reflection operations.
+            /// </summary>
+            /// <param name="member">stored info</param>
             public HandledMemberInfo(MemberInfo member)
             {
                 this.member = member;
             }
-
+            /// <summary>
+            /// The type of Field or Property.
+            /// </summary>
+            /// <exception cref="InvalidOperationException">It's not a FieldInfo or PropertyInfo.</exception>
             public Type MemberType
             {
                 get
@@ -32,22 +46,33 @@ namespace InEditor
                     };
                 }
             }
-
+            /// <summary>
+            /// If this is Field or Property of UnityEngine.Object.
+            /// </summary>
             public bool TypeIsObject
             {
-                get => typeof(UnityEngine.Object).IsAssignableFrom(MemberType);
+                get { return typeof(UnityEngine.Object).IsAssignableFrom(MemberType); }
             }
-
+            /// <summary>
+            /// If this member can be <see cref="SerializedProperty"/> of the target.
+            /// </summary>
+            /// <param name="target">target to check</param>
+            /// <returns></returns>
             public bool IsSerializedProperty(object target)
             {
                 return target switch
                 {
-                    SerializedObject serializedObject => serializedObject.FindProperty(Name) is object,
-                    SerializedProperty serializedProperty => serializedProperty.FindPropertyRelative(Name) is object,
+                    SerializedObject serializedObject => serializedObject.FindProperty(Name) is not null,
+                    SerializedProperty serializedProperty => serializedProperty.FindPropertyRelative(Name) is not null,
                     _ => false,
                 };
             }
-
+            /// <summary>
+            /// Gets value from a target instance, if static pass null.
+            /// </summary>
+            /// <param name="target">target to get</param>
+            /// <returns>generic value</returns>
+            /// <exception cref="InvalidOperationException">It's not a field or property</exception>
             public object GetValue(object target)
             {
                 return member switch
@@ -57,7 +82,12 @@ namespace InEditor
                     _ => throw new InvalidOperationException(),
                 };
             }
-
+            /// <summary>
+            /// Sets value from a target instance, if static pass null.
+            /// </summary>
+            /// <param name="target">target to get</param>
+            /// <param name="value">value to give to target</param>
+            /// <exception cref="InvalidOperationException">It's not a field or property</exception>
             public void SetValue(object target, object value)
             {
                 switch (member)
@@ -80,18 +110,17 @@ namespace InEditor
 
         public Type MemberType
         {
-            get => handledMember.MemberType;
+            get { return handledMember.MemberType; }
         }
+
         public string Name
         {
-            get
-            {
-                return handledMember.Name;
-            }
+            get { return handledMember.Name; }
         }
+
         public bool IsUnityObject
         {
-            get => handledMember.TypeIsObject;
+            get { return handledMember.TypeIsObject; }
         }
 
         public HandledMemberTarget(object rawTarget, MemberInfo member)
@@ -118,19 +147,6 @@ namespace InEditor
             };
         }
 
-        public object PassDown()
-        {
-            if (IsMemberSerializedProperty)
-                return FindProperty();
-            var target = rawTarget switch
-            {
-                SerializedObject serializedObject => serializedObject.targetObject,
-                SerializedProperty serializedProperty => serializedProperty.boxedValue,
-                _ => rawTarget,
-            };
-            return handledMember.GetValue(target);
-        }
-
         public object GetValue()
         {
             return IsMemberSerializedProperty
@@ -144,6 +160,19 @@ namespace InEditor
                 FindProperty().boxedValue = value;
             else
                 handledMember.SetValue(rawTarget, value);
+        }
+
+        public object PassDown()
+        {
+            if (IsMemberSerializedProperty)
+                return FindProperty();
+            var target = rawTarget switch
+            {
+                SerializedObject serializedObject => serializedObject.targetObject,
+                SerializedProperty serializedProperty => serializedProperty.boxedValue,
+                _ => rawTarget,
+            };
+            return handledMember.GetValue(target);
         }
 
         public void NullCheck()
