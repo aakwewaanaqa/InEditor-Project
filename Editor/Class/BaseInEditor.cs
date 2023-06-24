@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using InEditor.Editor.Class.Element;
 using InEditor.Runtime.Interface;
-using UnityEditor;
 
-namespace InEditor
+namespace InEditor.Editor.Class
 {
     /// <summary>
     /// The base editor to be inherited if a Monobehaviour we want it the draw with InEditorAttribute
     /// </summary>
-    public class BaseInEditor : Editor
+    public class BaseInEditor : UnityEditor.Editor
     {
         /// <summary>
         /// The inspected target type

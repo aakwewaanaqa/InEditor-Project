@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace InEditor
+namespace InEditor.Editor.Class.Element
 {
     public partial class InEditorElement
     {
