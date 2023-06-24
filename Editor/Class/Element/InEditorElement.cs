@@ -4,8 +4,11 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using InEditor.Editor.Class.Extensions;
+using InEditor.Editor.Class.Field;
+using InEditor.Editor.Class.HandledMember;
 
-namespace InEditor
+namespace InEditor.Editor.Class.Element
 {
     /// <summary>
     ///     It's a super class to deal fields and properties of inspector.

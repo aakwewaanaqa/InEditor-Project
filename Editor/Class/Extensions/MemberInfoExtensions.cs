@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Reflection;
-using System.Linq;
-using System.Collections.Generic;
 
-namespace InEditor
+namespace InEditor.Editor.Class.Extensions
 {
     internal static class MemberInfoExtensions
     {
-        public static bool TryGetAttribute<T>(this MemberInfo info, out T result) where T : Attribute
+        public static bool TryGetAttribute<T>(this MemberInfo info, out T result) where T : System.Attribute
         {
             result = info.GetCustomAttribute<T>();
             return result is not null;

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using UnityEditor;
+using InEditor.Editor.Class.Attribute;
+using InEditor.Editor.Class.Extensions;
+using InEditor.Editor.Class.HandledMember;
+using PlasticGui;
 using UnityEngine;
 
-namespace InEditor
+namespace InEditor.Editor.Class.Field
 {
     /// <summary>
     /// The abstract base class for all fields of IMGUIField to implemented by,
@@ -24,47 +26,25 @@ namespace InEditor
         protected GUIContent Label { get; private set; }
 
         /// <summary>
-        /// Pairing types with IMGUIField[T]
-        /// <br>
-        /// Planed to use attribute instead listing in Dictionary...
-        /// </br>
+        /// Stored types that have IMGUIFieldAttribute
         /// </summary>
-        private static readonly Dictionary<Type, Type> IMGUIPairs
-            = new Dictionary<Type, Type>()
-            {
-                { typeof(bool), typeof(IMGUIToggleField) }
+        private static readonly IEnumerable<Type> IMGUITypes =
+            AppDomain.CurrentDomain
+                .GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .Where(t => t.TryGetAttribute(out IMGUIFieldAttribute _));
 
-                //{ typeof(int), IMGUIDrawFieldEnum.Int },
-                //{ typeof(long), IMGUIDrawFieldEnum.Int },
-
-                //{ typeof(float), IMGUIDrawFieldEnum.Float },
-                //{ typeof(double), IMGUIDrawFieldEnum.Float },
-                //{ typeof(decimal), IMGUIDrawFieldEnum.Float },
-
-                //{ typeof(string), IMGUIDrawFieldEnum.Text },
-
-                //{ typeof(Rect), IMGUIDrawFieldEnum.Rect },
-                //{ typeof(RectInt), IMGUIDrawFieldEnum.RectInt },
-
-                //{ typeof(Bounds), IMGUIDrawFieldEnum.Bounds },
-                //{ typeof(BoundsInt), IMGUIDrawFieldEnum.BoundsInt },
-
-                //{ typeof(Color), IMGUIDrawFieldEnum.Color },
-                //{ typeof(Color32), IMGUIDrawFieldEnum.Color },
-
-                //{ typeof(Vector2), IMGUIDrawFieldEnum.Vector2 },
-                //{ typeof(Vector2Int), IMGUIDrawFieldEnum.Vector2Int },
-
-                //{ typeof(Vector3), IMGUIDrawFieldEnum.Vector3 },
-                //{ typeof(Vector3Int), IMGUIDrawFieldEnum.Vector3Int },
-
-                //{ typeof(Vector4), IMGUIDrawFieldEnum.Vector4 },
-                //{ typeof(Quaternion), IMGUIDrawFieldEnum.Vector4 },
-
-                //{ typeof(Gradient), IMGUIDrawFieldEnum.Gradient },
-
-                //{ typeof(UnityEngine.Object), IMGUIDrawFieldEnum.Object },
-            };
+        /// <summary>
+        /// Finds suitable target type of an IMGUIField type.
+        /// </summary>
+        /// <param name="target">target type</param>
+        /// <returns>IMGUIField[T] type</returns>
+        private static Type FindIMGUIType(Type target)
+        {
+            return IMGUITypes.FirstOrDefault(t =>
+                t.TryGetAttribute(out IMGUIFieldAttribute att) &&
+                att.Match(target));
+        }
 
         /// <summary>
         /// Creates type of IMGUIField[T].
@@ -75,18 +55,7 @@ namespace InEditor
         public static IMGUIField CreateIMGUI(HandledMemberTarget target, GUIContent label)
         {
             var type = target.MemberType;
-            
-            Type imguiType;
-            if (type.IsParentInEditorElement())
-            {
-                imguiType = typeof(IMGUIFold);
-            }
-            else
-            {
-                var key = IMGUIPairs.Keys.First(k => k.IsAssignableFrom(type));
-                imguiType = IMGUIPairs[key];
-            }
-                
+            var imguiType = type.IsParentInEditorElement() ? typeof(IMGUIFold) : FindIMGUIType(type);
             var imgui = (IMGUIField)Activator.CreateInstance(imguiType);
             imgui.Target = target;
             imgui.Label = label;
@@ -98,6 +67,7 @@ namespace InEditor
         /// to draw EditorGUILayout of this IMGUIField.
         /// </summary>
         public abstract void Layout();
+
         /// <summary>
         /// Used in InEditorElement.OnInspectorGUI()
         /// to get if the property is expanded or not.

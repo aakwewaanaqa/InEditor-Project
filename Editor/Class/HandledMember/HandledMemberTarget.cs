@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using UnityEditor;
 
-namespace InEditor
+namespace InEditor.Editor.Class.HandledMember
 {
     public class HandledMemberTarget
     {
@@ -14,7 +14,7 @@ namespace InEditor
             /// <summary>
             /// Stored reflection info.
             /// </summary>
-            private readonly MemberInfo member;
+            private readonly System.Reflection.MemberInfo member;
             /// <summary>
             /// Name of the MemberInfo.
             /// </summary>
@@ -26,7 +26,7 @@ namespace InEditor
             /// Creates a handled MemberInfo for later reflection operations.
             /// </summary>
             /// <param name="member">stored info</param>
-            public HandledMemberInfo(MemberInfo member)
+            public HandledMemberInfo(System.Reflection.MemberInfo member)
             {
                 this.member = member;
             }
@@ -123,7 +123,7 @@ namespace InEditor
             get { return handledMember.TypeIsObject; }
         }
 
-        public HandledMemberTarget(object rawTarget, MemberInfo member)
+        public HandledMemberTarget(object rawTarget, System.Reflection.MemberInfo member)
         {
             this.rawTarget = rawTarget;
             handledMember = new HandledMemberInfo(member);
@@ -187,6 +187,7 @@ namespace InEditor
             };
             if (handledMember.GetValue(target) is not null || IsUnityObject)
                 return;
+            //TODO: string doesn't have default constructor......
             handledMember.SetValue(target, Activator.CreateInstance(MemberType));
         }
     }

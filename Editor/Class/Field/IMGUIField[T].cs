@@ -1,10 +1,6 @@
-﻿using System;
-using System.Reflection;
-using UnityEditor;
-using UnityEngine;
-using Object = UnityEngine.Object;
+﻿using UnityEditor;
 
-namespace InEditor
+namespace InEditor.Editor.Class.Field
 {
     /// <summary>
     /// IMGUI Drawing base class of type T.

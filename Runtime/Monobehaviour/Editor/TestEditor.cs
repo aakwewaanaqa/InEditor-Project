@@ -1,7 +1,10 @@
-using InEditor;
+using InEditor.Editor.Class;
 using UnityEditor;
 
-[CustomEditor(typeof(Test))]
-public class TestEditor : BaseInEditor
+namespace InEditor.Runtime.Monobehaviour.Editor
 {
+    [CustomEditor(typeof(Test))]
+    public class TestEditor : BaseInEditor
+    {
+    }
 }
