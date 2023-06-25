@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Runtime.Serialization;
 using UnityEditor;
 
 namespace InEditor.Editor.Class.HandledMember
@@ -14,7 +15,7 @@ namespace InEditor.Editor.Class.HandledMember
             /// <summary>
             /// Stored reflection info.
             /// </summary>
-            private readonly System.Reflection.MemberInfo member;
+            private readonly MemberInfo member;
             /// <summary>
             /// Name of the MemberInfo.
             /// </summary>
@@ -187,8 +188,8 @@ namespace InEditor.Editor.Class.HandledMember
             };
             if (handledMember.GetValue(target) is not null || IsUnityObject)
                 return;
-            //TODO: string doesn't have default constructor......
-            handledMember.SetValue(target, Activator.CreateInstance(MemberType));
+            //GetUninitializedObject() is to deal with classes that don't have default ctor. Ex: string
+            handledMember.SetValue(target, FormatterServices.GetUninitializedObject(MemberType));
         }
     }
 }

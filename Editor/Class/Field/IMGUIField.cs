@@ -41,9 +41,17 @@ namespace InEditor.Editor.Class.Field
         /// <returns>IMGUIField[T] type</returns>
         private static Type FindIMGUIType(Type target)
         {
-            return IMGUITypes.FirstOrDefault(t =>
-                t.TryGetAttribute(out IMGUIFieldAttribute att) &&
-                att.Match(target));
+            try
+            {
+                return IMGUITypes.First(t =>
+                    t.TryGetAttribute(out IMGUIFieldAttribute att) &&
+                    att.Match(target));
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{target} : {e.Message}");
+                throw;
+            }
         }
 
         /// <summary>

@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿using System;
+using UnityEditor;
+using UnityEngine;
 
 namespace InEditor.Editor.Class.Field
 {
@@ -42,7 +44,15 @@ namespace InEditor.Editor.Class.Field
         /// </summary>
         protected virtual T GetValue()
         {
-            return (T)Target.GetValue();
+            try
+            {
+                return (T)Target.GetValue();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"IMGUIField[{typeof(T)}] : {e.Message}");
+                throw;
+            }
         }
 
         /// <summary>

@@ -38,11 +38,11 @@ namespace InEditor.Editor.Class.Element
             target.NullCheck();
             
             var name = inEditor.DisplayName;
-            var content = string.IsNullOrEmpty(name) ? target.Name : name;
-            content = inEditor.NicifyName ? ObjectNames.NicifyVariableName(content) : content;
-            var guiContent = new GUIContent(content);
+            name = string.IsNullOrEmpty(name) ? target.Name : name;
+            name = inEditor.NicifyName ? ObjectNames.NicifyVariableName(name) : name;
+            var content = new GUIContent(name);
             
-            imgui = IMGUIField.CreateIMGUI(target, guiContent);
+            imgui = IMGUIField.CreateIMGUI(target, content);
             
             hierarchy = member.IsParentInEditorElement()
                 ? new ElementHierarchy(parent, Reflect(target.PassDown(), target.MemberType, this))
