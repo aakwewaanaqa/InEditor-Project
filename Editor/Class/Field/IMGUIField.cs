@@ -27,6 +27,7 @@ namespace InEditor.Editor.Class.Field
 
         /// <summary>
         /// Stored types that have IMGUIFieldAttribute
+        /// TODO: Let this become dictionary to cut down the searching time.
         /// </summary>
         private static readonly IEnumerable<Type> IMGUITypes =
             AppDomain.CurrentDomain
