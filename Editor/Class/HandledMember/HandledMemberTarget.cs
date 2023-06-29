@@ -242,6 +242,9 @@ namespace InEditor.Editor.Class.HandledMember
                 FormatterServices.GetUninitializedObject(MemberType));
         }
 
+        /// <summary>
+        /// Gets gradient by property in <see cref="SerializedProperty"/>
+        /// </summary>
         private static PropertyInfo gradientValue
             = typeof(SerializedProperty).GetProperty("gradientValue",
                 BindingFlags.Public | BindingFlags.NonPublic |
@@ -252,7 +255,7 @@ namespace InEditor.Editor.Class.HandledMember
         /// </summary>
         /// <param name="prop">the target property</param>
         /// <param name="value">the value to give</param>
-        /// <exception cref="ArgumentOutOfRangeException">when it comes to array...</exception>
+        /// <exception cref="ArgumentOutOfRangeException">when it comes to not supported type</exception>
         private static void SetBoxedValue(SerializedProperty prop, object value)
         {
 #if UNITY_2022_1_OR_NEWER
@@ -339,6 +342,11 @@ namespace InEditor.Editor.Class.HandledMember
 #endif
         }
 
+        /// <summary>
+        /// Gets value of <see cref="SerializedProperty"/>; for boxedValue doesn't exist under version 2022...
+        /// </summary>
+        /// <param name="prop">the target property</param>
+        /// <exception cref="ArgumentOutOfRangeException">when it comes to not supported type</exception>
         private static object GetBoxedValue(SerializedProperty prop)
         {
 #if UNITY_2022_1_OR_NEWER
