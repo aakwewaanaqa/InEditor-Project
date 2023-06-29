@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
-using UnityEditor.UIElements;
-using Object = UnityEngine.Object;
 
-namespace InEditor
+namespace InEditor.Editor.Class.Extensions
 {
     public static class TypeExtensions
     {
@@ -34,12 +31,13 @@ namespace InEditor
             typeof(LayerMask),
             typeof(Gradient),
             typeof(AnimationCurve),
-            typeof(Object),
+            typeof(UnityEngine.Object),
         };
         public static bool CanBeParentInEditorElement(this Type type)
         {
-            
             if (typeof(IList).IsAssignableFrom(type))
+                return false;
+            if (typeof(UnityEngine.Object).IsAssignableFrom(type))
                 return false;
             if (type.IsPrimitive)
                 return false;
@@ -47,7 +45,7 @@ namespace InEditor
                 return false;
             return type.IsClass || type.IsValueType;
         }
-        public static IEnumerable<Type> GetTypesWithAttribute<TAttribute>() where TAttribute : Attribute
+        public static IEnumerable<Type> GetTypesWithAttribute<TAttribute>() where TAttribute : System.Attribute
         {
             return AppDomain.CurrentDomain
                 .GetAssemblies()

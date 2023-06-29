@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
-namespace InEditor
+namespace InEditor.Editor.Class.Field
 {
     /// <summary>
     /// IMGUI Drawing base class of type T.
@@ -18,16 +16,18 @@ namespace InEditor
         /// </summary>
         public override void Layout()
         {
-            using var scope = new EditorGUI.ChangeCheckScope();
-
-            var value = Layout(GetValue());
-            if (scope.changed)
-                SetValue(value);
+            using (var scope = new EditorGUI.ChangeCheckScope())
+            {
+                var value = Layout(GetValue());
+                if (scope.changed)
+                    SetValue(value);
+            }
         }
 
         public override bool IsExpended
         {
-            get => false;
+            get { return false; }
+            set { }
         }
 
         /// <summary>
@@ -46,7 +46,15 @@ namespace InEditor
         /// </summary>
         protected virtual T GetValue()
         {
-            return (T)Target.GetValue();
+            try
+            {
+                return (T)Target.GetValue();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"IMGUIField[{typeof(T)}] : {e.Message}");
+                throw;
+            }
         }
 
         /// <summary>

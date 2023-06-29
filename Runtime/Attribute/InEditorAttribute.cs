@@ -25,5 +25,14 @@ namespace InEditor
         /// Marks displaying of the IMGUI to be a certain type.
         /// </summary>
         public IMGUIDrawFieldEnum DesignatedIMGUI = IMGUIDrawFieldEnum.Auto;
+        /// <summary>
+        /// Mark it! Marks a field or property to draw in BaseInEditor Editor class.
+        /// Usually with an order is the best to sort drawing.
+        /// </summary>
+        /// <param name="order">display order, smaller first.</param>
+        public InEditorAttribute(int order = 0)
+        {
+            DisplayOrder = order;
+        }
     }
 }

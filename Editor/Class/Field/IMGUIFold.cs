@@ -1,8 +1,6 @@
-using System.Reflection;
 using UnityEditor;
-using UnityEngine;
 
-namespace InEditor
+namespace InEditor.Editor.Class.Field
 {
     public sealed class IMGUIFold : IMGUIField<bool>
     {
@@ -31,7 +29,8 @@ namespace InEditor
 
         public override bool IsExpended
         {
-            get => GetValue();
+            get { return GetValue(); }
+            set { SetValue(value); }
         }
     }
 }

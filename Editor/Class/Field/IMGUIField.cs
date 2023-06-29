@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using UnityEditor;
+using InEditor.Editor.Class.Attribute;
+using InEditor.Editor.Class.Extensions;
+using InEditor.Editor.Class.HandledMember;
 using UnityEngine;
 
-namespace InEditor
+namespace InEditor.Editor.Class.Field
 {
     /// <summary>
     /// The abstract base class for all fields of IMGUIField to implemented by,
@@ -24,47 +25,48 @@ namespace InEditor
         protected GUIContent Label { get; private set; }
 
         /// <summary>
-        /// Pairing types with IMGUIField[T]
-        /// <br>
-        /// Planed to use attribute instead listing in Dictionary...
-        /// </br>
+        /// Stored types that have IMGUIFieldAttribute with dictionary to reduce search time.
         /// </summary>
-        private static readonly Dictionary<Type, Type> IMGUIPairs
-            = new Dictionary<Type, Type>()
+        private static readonly Dictionary<Type, Type> IMGUITables;
+
+        /// <summary>
+        /// Creates static field first.
+        /// </summary>
+        static IMGUIField()
+        {
+            IMGUITables = new Dictionary<Type, Type>();
+            AppDomain.CurrentDomain
+                .GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .ToList()
+                .ForEach(type =>
+                {
+                    if (!type.TryGetAttribute(out IMGUIFieldAttribute att))
+                        return;
+                    foreach (var target in att.Targets)
+                        IMGUITables.Add(target, type);
+                });
+        }
+
+        /// <summary>
+        /// Finds suitable target type of an IMGUIField type.
+        /// </summary>
+        /// <param name="target">target type</param>
+        /// <returns>IMGUIField[T] type</returns>
+        private static Type FindIMGUIType(Type target)
+        {
+            try
             {
-                { typeof(bool), typeof(IMGUIToggleField) }
-
-                //{ typeof(int), IMGUIDrawFieldEnum.Int },
-                //{ typeof(long), IMGUIDrawFieldEnum.Int },
-
-                //{ typeof(float), IMGUIDrawFieldEnum.Float },
-                //{ typeof(double), IMGUIDrawFieldEnum.Float },
-                //{ typeof(decimal), IMGUIDrawFieldEnum.Float },
-
-                //{ typeof(string), IMGUIDrawFieldEnum.Text },
-
-                //{ typeof(Rect), IMGUIDrawFieldEnum.Rect },
-                //{ typeof(RectInt), IMGUIDrawFieldEnum.RectInt },
-
-                //{ typeof(Bounds), IMGUIDrawFieldEnum.Bounds },
-                //{ typeof(BoundsInt), IMGUIDrawFieldEnum.BoundsInt },
-
-                //{ typeof(Color), IMGUIDrawFieldEnum.Color },
-                //{ typeof(Color32), IMGUIDrawFieldEnum.Color },
-
-                //{ typeof(Vector2), IMGUIDrawFieldEnum.Vector2 },
-                //{ typeof(Vector2Int), IMGUIDrawFieldEnum.Vector2Int },
-
-                //{ typeof(Vector3), IMGUIDrawFieldEnum.Vector3 },
-                //{ typeof(Vector3Int), IMGUIDrawFieldEnum.Vector3Int },
-
-                //{ typeof(Vector4), IMGUIDrawFieldEnum.Vector4 },
-                //{ typeof(Quaternion), IMGUIDrawFieldEnum.Vector4 },
-
-                //{ typeof(Gradient), IMGUIDrawFieldEnum.Gradient },
-
-                //{ typeof(UnityEngine.Object), IMGUIDrawFieldEnum.Object },
-            };
+                if (typeof(UnityEngine.Object).IsAssignableFrom(target))
+                    return typeof(IMGUIObjectField);
+                return IMGUITables[target];
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{target} : {e.Message}");
+                throw;
+            }
+        }
 
         /// <summary>
         /// Creates type of IMGUIField[T].
@@ -75,19 +77,12 @@ namespace InEditor
         public static IMGUIField CreateIMGUI(HandledMemberTarget target, GUIContent label)
         {
             var type = target.MemberType;
-            
-            Type imguiType;
-            if (type.IsParentInEditorElement())
-            {
-                imguiType = typeof(IMGUIFold);
-            }
-            else
-            {
-                var key = IMGUIPairs.Keys.First(k => k.IsAssignableFrom(type));
-                imguiType = IMGUIPairs[key];
-            }
-                
-            var imgui = (IMGUIField)Activator.CreateInstance(imguiType);
+            var imguiType = type.IsParentInEditorElement()
+                ? typeof(IMGUIFold)
+                : FindIMGUIType(type);
+            var imgui = target.IsMemberSerializedProperty
+                ? new IMGUIPropertyField()
+                : (IMGUIField)Activator.CreateInstance(imguiType);
             imgui.Target = target;
             imgui.Label = label;
             return imgui;
@@ -98,10 +93,11 @@ namespace InEditor
         /// to draw EditorGUILayout of this IMGUIField.
         /// </summary>
         public abstract void Layout();
+
         /// <summary>
         /// Used in InEditorElement.OnInspectorGUI()
         /// to get if the property is expanded or not.
         /// </summary>
-        public abstract bool IsExpended { get; }
+        public abstract bool IsExpended { get; set; }
     }
 }

@@ -4,8 +4,11 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using InEditor.Editor.Class.Extensions;
+using InEditor.Editor.Class.Field;
+using InEditor.Editor.Class.HandledMember;
 
-namespace InEditor
+namespace InEditor.Editor.Class.Element
 {
     /// <summary>
     ///     It's a super class to deal fields and properties of inspector.
@@ -35,11 +38,11 @@ namespace InEditor
             target.NullCheck();
             
             var name = inEditor.DisplayName;
-            var content = string.IsNullOrEmpty(name) ? target.Name : name;
-            content = inEditor.NicifyName ? ObjectNames.NicifyVariableName(content) : content;
-            var guiContent = new GUIContent(content);
+            name = string.IsNullOrEmpty(name) ? target.Name : name;
+            name = inEditor.NicifyName ? ObjectNames.NicifyVariableName(name) : name;
+            var content = new GUIContent(name);
             
-            imgui = IMGUIField.CreateIMGUI(target, guiContent);
+            imgui = IMGUIField.CreateIMGUI(target, content);
             
             hierarchy = member.IsParentInEditorElement()
                 ? new ElementHierarchy(parent, Reflect(target.PassDown(), target.MemberType, this))
@@ -79,8 +82,8 @@ namespace InEditor
                     // We only want field and property.....
                     // field is like <code> private string str </code>
                     // property is like <code> private string str { get; set; } </code>
-                    case FieldInfo:
-                    case PropertyInfo:
+                    case FieldInfo _:
+                    case PropertyInfo _:
                         members.Add(new InEditorElement(target, info, parent));
                         break;
                 }

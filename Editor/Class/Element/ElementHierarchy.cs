@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace InEditor
+namespace InEditor.Editor.Class.Element
 {
     public partial class InEditorElement
     {
@@ -21,7 +21,7 @@ namespace InEditor
 
             public bool HasRelatives
             {
-                get { return relatives is not null; }
+                get { return !(relatives is null); }
             }
 
             public IEnumerator<InEditorElement> GetEnumerator()
