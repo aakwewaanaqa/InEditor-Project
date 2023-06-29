@@ -25,14 +25,28 @@ namespace InEditor.Editor.Class.Field
         protected GUIContent Label { get; private set; }
 
         /// <summary>
-        /// Stored types that have IMGUIFieldAttribute
-        /// TODO: Let this become dictionary to cut down the searching time.
+        /// Stored types that have IMGUIFieldAttribute with dictionary to reduce search time.
         /// </summary>
-        private static readonly IEnumerable<Type> IMGUITypes =
+        private static readonly Dictionary<Type, Type> IMGUITables;
+
+        /// <summary>
+        /// Creates static field first.
+        /// </summary>
+        static IMGUIField()
+        {
+            IMGUITables = new Dictionary<Type, Type>();
             AppDomain.CurrentDomain
                 .GetAssemblies()
                 .SelectMany(a => a.GetTypes())
-                .Where(t => t.TryGetAttribute(out IMGUIFieldAttribute _));
+                .ToList()
+                .ForEach(type =>
+                {
+                    if (!type.TryGetAttribute(out IMGUIFieldAttribute att))
+                        return;
+                    foreach (var target in att.Targets)
+                        IMGUITables.Add(target, type);
+                });
+        }
 
         /// <summary>
         /// Finds suitable target type of an IMGUIField type.
@@ -43,9 +57,9 @@ namespace InEditor.Editor.Class.Field
         {
             try
             {
-                return IMGUITypes.First(t =>
-                    t.TryGetAttribute(out IMGUIFieldAttribute att) &&
-                    att.Match(target));
+                if (typeof(UnityEngine.Object).IsAssignableFrom(target))
+                    return typeof(IMGUIObjectField);
+                return IMGUITables[target];
             }
             catch (Exception e)
             {
@@ -63,8 +77,12 @@ namespace InEditor.Editor.Class.Field
         public static IMGUIField CreateIMGUI(HandledMemberTarget target, GUIContent label)
         {
             var type = target.MemberType;
-            var imguiType = type.IsParentInEditorElement() ? typeof(IMGUIFold) : FindIMGUIType(type);
-            var imgui = (IMGUIField)Activator.CreateInstance(imguiType);
+            var imguiType = type.IsParentInEditorElement()
+                ? typeof(IMGUIFold)
+                : FindIMGUIType(type);
+            var imgui = target.IsMemberSerializedProperty
+                ? new IMGUIPropertyField()
+                : (IMGUIField)Activator.CreateInstance(imguiType);
             imgui.Target = target;
             imgui.Label = label;
             return imgui;
@@ -80,6 +98,6 @@ namespace InEditor.Editor.Class.Field
         /// Used in InEditorElement.OnInspectorGUI()
         /// to get if the property is expanded or not.
         /// </summary>
-        public abstract bool IsExpended { get; }
+        public abstract bool IsExpended { get; set; }
     }
 }

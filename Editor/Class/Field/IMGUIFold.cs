@@ -29,7 +29,8 @@ namespace InEditor.Editor.Class.Field
 
         public override bool IsExpended
         {
-            get => GetValue();
+            get { return GetValue(); }
+            set { SetValue(value); }
         }
     }
 }

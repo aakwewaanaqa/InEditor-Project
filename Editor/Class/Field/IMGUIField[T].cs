@@ -26,7 +26,8 @@ namespace InEditor.Editor.Class.Field
 
         public override bool IsExpended
         {
-            get => false;
+            get { return false; }
+            set { }
         }
 
         /// <summary>
