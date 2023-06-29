@@ -41,5 +41,13 @@ namespace InEditor
         public AnimationCurve curve;
         [InEditor(16)]
         public GameObject obj;
+        [InEditor(17)]
+        public ManagedClass managed;
+        
+        [Serializable]
+        public class ManagedClass
+        {
+            public bool b;
+        }
     }
 }
