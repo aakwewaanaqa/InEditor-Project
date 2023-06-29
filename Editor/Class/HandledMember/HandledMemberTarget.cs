@@ -335,9 +335,10 @@ namespace InEditor.Editor.Class.HandledMember
                 case SerializedPropertyType.ManagedReference:
                     prop.managedReferenceValue = value;
                     break;
+
                 default:
                 case SerializedPropertyType.Generic:
-                    throw new ArgumentOutOfRangeException();
+                    throw new NotImplementedException("Until UNITY_2022_1_OR_NEWER");
             }
 #endif
         }
@@ -400,11 +401,11 @@ namespace InEditor.Editor.Class.HandledMember
                     return prop.boundsIntValue;
                 case SerializedPropertyType.Quaternion:
                     return prop.quaternionValue;
-                case SerializedPropertyType.ManagedReference:
-                    return prop.managedReferenceValue;
+
                 default:
                 case SerializedPropertyType.Generic:
-                    throw new ArgumentOutOfRangeException();
+                case SerializedPropertyType.ManagedReference:
+                    throw new NotImplementedException("Until UNITY_2022_1_OR_NEWER");
             }
 #endif
         }
