@@ -179,9 +179,13 @@ namespace InEditor.Editor.Class.HandledMember
 
         public object GetValue()
         {
+#if UNITY_2022_1_OR_NEWER
             return IsMemberSerializedProperty
                 ? FindProperty().boxedValue
                 : handledMember.GetValue(rawTarget);
+#else
+            return IsMemberSerializedProperty ? GetBoxedValue(FindProperty()) : handledMember.GetValue(rawTarget);
+#endif
         }
 
         public void SetValue(object value)
@@ -203,7 +207,7 @@ namespace InEditor.Editor.Class.HandledMember
                     target = serializedObject.targetObject;
                     break;
                 case SerializedProperty serializedProperty:
-                    target = serializedProperty.boxedValue;
+                    target = GetBoxedValue(serializedProperty);
                     break;
                 default:
                     target = rawTarget;
@@ -224,7 +228,7 @@ namespace InEditor.Editor.Class.HandledMember
                     target = serializedObject.targetObject;
                     break;
                 case SerializedProperty serializedProperty:
-                    target = serializedProperty.boxedValue;
+                    target = GetBoxedValue(serializedProperty);
                     break;
                 default:
                     target = rawTarget;
@@ -242,7 +246,7 @@ namespace InEditor.Editor.Class.HandledMember
             = typeof(SerializedProperty).GetProperty("gradientValue",
                 BindingFlags.Public | BindingFlags.NonPublic |
                 BindingFlags.Instance);
-        
+
         /// <summary>
         /// Sets value of <see cref="SerializedProperty"/>; for boxedValue doesn't exist under version 2022...
         /// </summary>
@@ -322,8 +326,6 @@ namespace InEditor.Editor.Class.HandledMember
                 case SerializedPropertyType.BoundsInt:
                     prop.boundsIntValue = (BoundsInt)value;
                     break;
-                case SerializedPropertyType.Generic:
-                    break;
                 case SerializedPropertyType.Quaternion:
                     prop.quaternionValue = (Quaternion)value;
                     break;
@@ -331,6 +333,91 @@ namespace InEditor.Editor.Class.HandledMember
                     prop.managedReferenceValue = value;
                     break;
                 default:
+                case SerializedPropertyType.Generic:
+                    throw new ArgumentOutOfRangeException();
+            }
+#endif
+        }
+
+        private static object GetBoxedValue(SerializedProperty prop)
+        {
+#if UNITY_2022_1_OR_NEWER
+            return prop.boxedValue;
+#else
+            switch (prop.propertyType)
+            {
+                case SerializedPropertyType.Integer:
+                    return prop.intValue;
+                case SerializedPropertyType.Boolean:
+                    return prop.boolValue;
+                case SerializedPropertyType.Float:
+                    return prop.floatValue;
+                    break;
+                case SerializedPropertyType.String:
+                    return prop.stringValue;
+                    break;
+                case SerializedPropertyType.Color:
+                    return prop.colorValue;
+                    break;
+                case SerializedPropertyType.ObjectReference:
+                    return prop.objectReferenceValue;
+                    break;
+                case SerializedPropertyType.LayerMask:
+                    return prop.intValue;
+                    break;
+                case SerializedPropertyType.Enum:
+                    return prop.enumValueIndex;
+                    break;
+                case SerializedPropertyType.Vector2:
+                    return prop.vector2Value;
+                    break;
+                case SerializedPropertyType.Vector3:
+                    return prop.vector3Value;
+                    break;
+                case SerializedPropertyType.Vector4:
+                    return prop.vector4Value;
+                    break;
+                case SerializedPropertyType.Rect:
+                    return prop.rectValue;
+                    break;
+                case SerializedPropertyType.ArraySize:
+                    return prop.intValue;
+                    break;
+                case SerializedPropertyType.Character:
+                    return prop.intValue;
+                    break;
+                case SerializedPropertyType.AnimationCurve:
+                    return prop.animationCurveValue;
+                    break;
+                case SerializedPropertyType.Bounds:
+                    return prop.boundsValue;
+                    break;
+                case SerializedPropertyType.Gradient:
+                    return gradientValue.GetValue(prop);
+                    break;
+                case SerializedPropertyType.ExposedReference:
+                    return prop.exposedReferenceValue;
+                    break;
+                case SerializedPropertyType.Vector2Int:
+                    return prop.vector2IntValue;
+                    break;
+                case SerializedPropertyType.Vector3Int:
+                    return prop.vector3IntValue;
+                    break;
+                case SerializedPropertyType.RectInt:
+                    return prop.rectIntValue;
+                    break;
+                case SerializedPropertyType.BoundsInt:
+                    return prop.boundsIntValue;
+                    break;
+                    break;
+                case SerializedPropertyType.Quaternion:
+                    return prop.quaternionValue;
+                    break;
+                case SerializedPropertyType.ManagedReference:
+                    return prop.managedReferenceValue;
+                default:
+                case SerializedPropertyType.Generic:
                     throw new ArgumentOutOfRangeException();
             }
 #endif
