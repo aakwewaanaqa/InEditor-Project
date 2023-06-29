@@ -4,7 +4,6 @@ using System.Linq;
 using InEditor.Editor.Class.Attribute;
 using InEditor.Editor.Class.Extensions;
 using InEditor.Editor.Class.HandledMember;
-using PlasticGui;
 using UnityEngine;
 
 namespace InEditor.Editor.Class.Field

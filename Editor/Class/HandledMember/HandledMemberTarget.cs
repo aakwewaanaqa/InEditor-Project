@@ -2,6 +2,8 @@ using System;
 using System.Reflection;
 using System.Runtime.Serialization;
 using UnityEditor;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace InEditor.Editor.Class.HandledMember
 {
@@ -16,6 +18,7 @@ namespace InEditor.Editor.Class.HandledMember
             /// Stored reflection info.
             /// </summary>
             private readonly MemberInfo member;
+
             /// <summary>
             /// Name of the MemberInfo.
             /// </summary>
@@ -23,6 +26,7 @@ namespace InEditor.Editor.Class.HandledMember
             {
                 get { return member.Name; }
             }
+
             /// <summary>
             /// Creates a handled MemberInfo for later reflection operations.
             /// </summary>
@@ -31,6 +35,7 @@ namespace InEditor.Editor.Class.HandledMember
             {
                 this.member = member;
             }
+
             /// <summary>
             /// The type of Field or Property.
             /// </summary>
@@ -39,21 +44,30 @@ namespace InEditor.Editor.Class.HandledMember
             {
                 get
                 {
-                    return member switch
+                    switch (member)
                     {
-                        FieldInfo fieldInfo => fieldInfo.FieldType,
-                        PropertyInfo propertyInfo => propertyInfo.PropertyType,
-                        _ => throw new InvalidOperationException(),
-                    };
+                        case FieldInfo fieldInfo:
+                            return fieldInfo.FieldType;
+                        case PropertyInfo propertyInfo:
+                            return propertyInfo.PropertyType;
+                        default:
+                            throw new InvalidOperationException();
+                    }
                 }
             }
+
             /// <summary>
             /// If this is Field or Property of UnityEngine.Object.
             /// </summary>
             public bool TypeIsObject
             {
-                get { return typeof(UnityEngine.Object).IsAssignableFrom(MemberType); }
+                get
+                {
+                    return typeof(UnityEngine.Object).IsAssignableFrom(
+                        MemberType);
+                }
             }
+
             /// <summary>
             /// If this member can be <see cref="SerializedProperty"/> of the target.
             /// </summary>
@@ -61,13 +75,19 @@ namespace InEditor.Editor.Class.HandledMember
             /// <returns></returns>
             public bool IsSerializedProperty(object target)
             {
-                return target switch
+                switch (target)
                 {
-                    SerializedObject serializedObject => serializedObject.FindProperty(Name) is not null,
-                    SerializedProperty serializedProperty => serializedProperty.FindPropertyRelative(Name) is not null,
-                    _ => false,
-                };
+                    case SerializedObject serializedObject:
+                        return !(serializedObject.FindProperty(Name) is null);
+                    case SerializedProperty serializedProperty:
+                        return !(serializedProperty.FindPropertyRelative(Name)
+                            is
+                            null);
+                    default:
+                        return false;
+                }
             }
+
             /// <summary>
             /// Gets value from a target instance, if static pass null.
             /// </summary>
@@ -76,13 +96,17 @@ namespace InEditor.Editor.Class.HandledMember
             /// <exception cref="InvalidOperationException">It's not a field or property</exception>
             public object GetValue(object target)
             {
-                return member switch
+                switch (member)
                 {
-                    FieldInfo fieldInfo => fieldInfo.GetValue(target),
-                    PropertyInfo propertyInfo => propertyInfo.GetValue(target),
-                    _ => throw new InvalidOperationException(),
-                };
+                    case FieldInfo fieldInfo:
+                        return fieldInfo.GetValue(target);
+                    case PropertyInfo propertyInfo:
+                        return propertyInfo.GetValue(target);
+                    default:
+                        throw new InvalidOperationException();
+                }
             }
+
             /// <summary>
             /// Sets value from a target instance, if static pass null.
             /// </summary>
@@ -124,11 +148,13 @@ namespace InEditor.Editor.Class.HandledMember
             get { return handledMember.TypeIsObject; }
         }
 
-        public HandledMemberTarget(object rawTarget, System.Reflection.MemberInfo member)
+        public HandledMemberTarget(object rawTarget,
+            System.Reflection.MemberInfo member)
         {
             this.rawTarget = rawTarget;
             handledMember = new HandledMemberInfo(member);
-            IsMemberSerializedProperty = handledMember.IsSerializedProperty(this.rawTarget);
+            IsMemberSerializedProperty =
+                handledMember.IsSerializedProperty(this.rawTarget);
         }
 
         public void Retarget(object target)
@@ -140,12 +166,15 @@ namespace InEditor.Editor.Class.HandledMember
         {
             if (!IsMemberSerializedProperty)
                 throw new InvalidOperationException();
-            return rawTarget switch
+            switch (rawTarget)
             {
-                SerializedObject serializedObject => serializedObject.FindProperty(handledMember.Name),
-                SerializedProperty property => property.FindPropertyRelative(handledMember.Name),
-                _ => throw new InvalidOperationException()
-            };
+                case SerializedObject serializedObject:
+                    return serializedObject.FindProperty(handledMember.Name);
+                case SerializedProperty property:
+                    return property.FindPropertyRelative(handledMember.Name);
+                default:
+                    throw new InvalidOperationException();
+            }
         }
 
         public object GetValue()
@@ -158,7 +187,7 @@ namespace InEditor.Editor.Class.HandledMember
         public void SetValue(object value)
         {
             if (IsMemberSerializedProperty)
-                FindProperty().boxedValue = value;
+                SetBoxedValue(FindProperty(), value);
             else
                 handledMember.SetValue(rawTarget, value);
         }
@@ -167,12 +196,20 @@ namespace InEditor.Editor.Class.HandledMember
         {
             if (IsMemberSerializedProperty)
                 return FindProperty();
-            var target = rawTarget switch
+            object target;
+            switch (rawTarget)
             {
-                SerializedObject serializedObject => serializedObject.targetObject,
-                SerializedProperty serializedProperty => serializedProperty.boxedValue,
-                _ => rawTarget,
-            };
+                case SerializedObject serializedObject:
+                    target = serializedObject.targetObject;
+                    break;
+                case SerializedProperty serializedProperty:
+                    target = serializedProperty.boxedValue;
+                    break;
+                default:
+                    target = rawTarget;
+                    break;
+            }
+
             return handledMember.GetValue(target);
         }
 
@@ -180,16 +217,123 @@ namespace InEditor.Editor.Class.HandledMember
         {
             if (IsMemberSerializedProperty)
                 return;
-            var target = rawTarget switch
+            object target;
+            switch (rawTarget)
             {
-                SerializedObject serializedObject => serializedObject.targetObject,
-                SerializedProperty serializedProperty => serializedProperty.boxedValue,
-                _ => rawTarget,
-            };
-            if (handledMember.GetValue(target) is not null || IsUnityObject)
+                case SerializedObject serializedObject:
+                    target = serializedObject.targetObject;
+                    break;
+                case SerializedProperty serializedProperty:
+                    target = serializedProperty.boxedValue;
+                    break;
+                default:
+                    target = rawTarget;
+                    break;
+            }
+
+            if (!(handledMember.GetValue(target) is null) || IsUnityObject)
                 return;
             //GetUninitializedObject() is to deal with classes that don't have default ctor. Ex: string
-            handledMember.SetValue(target, FormatterServices.GetUninitializedObject(MemberType));
+            handledMember.SetValue(target,
+                FormatterServices.GetUninitializedObject(MemberType));
+        }
+
+        private static PropertyInfo gradientValue
+            = typeof(SerializedProperty).GetProperty("gradientValue",
+                BindingFlags.Public | BindingFlags.NonPublic |
+                BindingFlags.Instance);
+        
+        /// <summary>
+        /// Sets value of <see cref="SerializedProperty"/>; for boxedValue doesn't exist under version 2022...
+        /// </summary>
+        /// <param name="prop">the target property</param>
+        /// <param name="value">the value to give</param>
+        /// <exception cref="ArgumentOutOfRangeException">when it comes to array...</exception>
+        private static void SetBoxedValue(SerializedProperty prop, object value)
+        {
+#if UNITY_2022_1_OR_NEWER
+            prop.boxedValue = value;
+#else
+            switch (prop.propertyType)
+            {
+                case SerializedPropertyType.Integer:
+                    prop.intValue = (int)value;
+                    break;
+                case SerializedPropertyType.Boolean:
+                    prop.boolValue = (bool)value;
+                    break;
+                case SerializedPropertyType.Float:
+                    prop.floatValue = (float)value;
+                    break;
+                case SerializedPropertyType.String:
+                    prop.stringValue = value as string;
+                    break;
+                case SerializedPropertyType.Color:
+                    prop.colorValue = (Color)value;
+                    break;
+                case SerializedPropertyType.ObjectReference:
+                    prop.objectReferenceValue = value as Object;
+                    break;
+                case SerializedPropertyType.LayerMask:
+                    prop.intValue = (int)value;
+                    break;
+                case SerializedPropertyType.Enum:
+                    prop.enumValueIndex = (int)value;
+                    break;
+                case SerializedPropertyType.Vector2:
+                    prop.vector2Value = (Vector2)value;
+                    break;
+                case SerializedPropertyType.Vector3:
+                    prop.vector3Value = (Vector3)value;
+                    break;
+                case SerializedPropertyType.Vector4:
+                    prop.vector4Value = (Vector4)value;
+                    break;
+                case SerializedPropertyType.Rect:
+                    prop.rectValue = (Rect)value;
+                    break;
+                case SerializedPropertyType.ArraySize:
+                    prop.intValue = (int)value;
+                    break;
+                case SerializedPropertyType.Character:
+                    prop.intValue = (int)value;
+                    break;
+                case SerializedPropertyType.AnimationCurve:
+                    prop.animationCurveValue = (AnimationCurve)value;
+                    break;
+                case SerializedPropertyType.Bounds:
+                    prop.boundsValue = (Bounds)value;
+                    break;
+                case SerializedPropertyType.Gradient:
+                    gradientValue.SetValue(prop, value);
+                    break;
+                case SerializedPropertyType.ExposedReference:
+                    prop.exposedReferenceValue = (Object)value;
+                    break;
+                case SerializedPropertyType.Vector2Int:
+                    prop.vector2IntValue = (Vector2Int)value;
+                    break;
+                case SerializedPropertyType.Vector3Int:
+                    prop.vector3IntValue = (Vector3Int)value;
+                    break;
+                case SerializedPropertyType.RectInt:
+                    prop.rectIntValue = (RectInt)value;
+                    break;
+                case SerializedPropertyType.BoundsInt:
+                    prop.boundsIntValue = (BoundsInt)value;
+                    break;
+                case SerializedPropertyType.Generic:
+                    break;
+                case SerializedPropertyType.Quaternion:
+                    prop.quaternionValue = (Quaternion)value;
+                    break;
+                case SerializedPropertyType.ManagedReference:
+                    prop.managedReferenceValue = value;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+#endif
         }
     }
 }

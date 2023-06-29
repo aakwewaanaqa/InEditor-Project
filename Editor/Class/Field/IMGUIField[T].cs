@@ -16,11 +16,12 @@ namespace InEditor.Editor.Class.Field
         /// </summary>
         public override void Layout()
         {
-            using var scope = new EditorGUI.ChangeCheckScope();
-
-            var value = Layout(GetValue());
-            if (scope.changed)
-                SetValue(value);
+            using (var scope = new EditorGUI.ChangeCheckScope())
+            {
+                var value = Layout(GetValue());
+                if (scope.changed)
+                    SetValue(value);
+            }
         }
 
         public override bool IsExpended

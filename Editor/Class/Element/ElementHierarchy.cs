@@ -21,7 +21,7 @@ namespace InEditor.Editor.Class.Element
 
             public bool HasRelatives
             {
-                get { return relatives is not null; }
+                get { return !(relatives is null); }
             }
 
             public IEnumerator<InEditorElement> GetEnumerator()

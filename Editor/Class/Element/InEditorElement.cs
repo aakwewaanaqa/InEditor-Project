@@ -82,8 +82,8 @@ namespace InEditor.Editor.Class.Element
                     // We only want field and property.....
                     // field is like <code> private string str </code>
                     // property is like <code> private string str { get; set; } </code>
-                    case FieldInfo:
-                    case PropertyInfo:
+                    case FieldInfo _:
+                    case PropertyInfo _:
                         members.Add(new InEditorElement(target, info, parent));
                         break;
                 }
