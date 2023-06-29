@@ -10,3 +10,11 @@
 ### [Added] IMGUI Field
 
 - Added for drawing not serialized properties.
+
+## [1.0.1] 2023/06/30
+
+### [Changed] Lower Unity Version
+
+- HandledMemberTarget now rewrite to accept 2019 with no 
+boxed value.
+- Switch pattern rewritten to cases & blocks.

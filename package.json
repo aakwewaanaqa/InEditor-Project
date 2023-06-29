@@ -1,9 +1,9 @@
 {
   "name": "com.ponito.ineditor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "InEditor Attribute",
   "description": "A package to make Editor implementation work easily",
-  "unity": "2022.1",
+  "unity": "2019.4",
   "author": 
   {
     "name": "Ponito / Aakwewaanaqa"
