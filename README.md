@@ -26,7 +26,7 @@ namespace Anyway
 ## Step 2
 
 Use `namespace` `InEditor`.
-Change where the class inheritance from `Editor` to `BaseInEditor`,
+Change where the class inheritance from `Editor` to [BaseInEditor](https://github.com/aakwewaanaqa/InEditor-Project/blob/update/Editor/Class/BaseInEditor.cs),
 and this will do the trick.
 
 ```C#
@@ -45,8 +45,8 @@ namespace Anyway
 
 ## Step 3
 
-Add what you what to show in `Inspector` with `InEditorAttribute`.
-The number in the `Attribute` means the `DisplayOrder` of the `field`.
+Add what you what to show in `Inspector` with [InEditorAttribute](https://github.com/aakwewaanaqa/InEditor-Project/blob/update/Runtime/Attribute/InEditorAttribute.cs).
+The number in the `Attribute` means the [DisplayOrder](https://github.com/aakwewaanaqa/InEditor-Project/blob/update/Runtime/Attribute/InEditorAttribute.cs#L15-L15) of the `field`.
 
 ```C#
 using UnityEditor;
