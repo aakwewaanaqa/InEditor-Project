@@ -16,7 +16,7 @@ namespace InEditor
         [InEditor(2)]
         public float f;
 
-        [InEditor(3)]
+        [InEditor(3, false)]
         public string str;
 
         [InEditor(4)]

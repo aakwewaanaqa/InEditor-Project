@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using InEditor.Editor.Class.Element;
 using InEditor.Runtime.Interface;
+using UnityEditor;
 
 namespace InEditor.Editor.Class
 {
@@ -47,6 +48,9 @@ namespace InEditor.Editor.Class
                 attribute.OnInspectorGUI(this);
             // Apply changes that happens on any SerializedProperty.
             serializedObject.ApplyModifiedProperties();
+            
+            EditorGUILayout.Separator();
+            EditorGUILayout.LabelField("InEditor", EditorStyles.centeredGreyMiniLabel);
         }
     }
 }

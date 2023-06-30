@@ -184,7 +184,9 @@ namespace InEditor.Editor.Class.HandledMember
                 ? FindProperty().boxedValue
                 : handledMember.GetValue(rawTarget);
 #else
-            return IsMemberSerializedProperty ? GetBoxedValue(FindProperty()) : handledMember.GetValue(rawTarget);
+            return IsMemberSerializedProperty
+                ? GetBoxedValue(FindProperty())
+                : handledMember.GetValue(rawTarget);
 #endif
         }
 
@@ -237,9 +239,13 @@ namespace InEditor.Editor.Class.HandledMember
 
             if (!(handledMember.GetValue(target) is null) || IsUnityObject)
                 return;
-            //GetUninitializedObject() is to deal with classes that don't have default ctor. Ex: string
-            handledMember.SetValue(target,
-                FormatterServices.GetUninitializedObject(MemberType));
+
+            var newValue = MemberType == typeof(Gradient)
+                //Found that gradient without ctor will crash the Unity Editor
+                ? new Gradient()
+                //GetUninitializedObject() is to deal with classes that don't have default ctor. Ex: string
+                : FormatterServices.GetUninitializedObject(MemberType);
+            handledMember.SetValue(target, newValue);
         }
 
         /// <summary>
@@ -338,7 +344,8 @@ namespace InEditor.Editor.Class.HandledMember
 
                 default:
                 case SerializedPropertyType.Generic:
-                    throw new NotImplementedException("Until UNITY_2022_1_OR_NEWER");
+                    throw new NotImplementedException(
+                        "Until UNITY_2022_1_OR_NEWER");
             }
 #endif
         }
@@ -405,7 +412,8 @@ namespace InEditor.Editor.Class.HandledMember
                 default:
                 case SerializedPropertyType.Generic:
                 case SerializedPropertyType.ManagedReference:
-                    throw new NotImplementedException("Until UNITY_2022_1_OR_NEWER");
+                    throw new NotImplementedException(
+                        "Until UNITY_2022_1_OR_NEWER");
             }
 #endif
         }

@@ -11,46 +11,61 @@ using InEditor.Editor.Class.HandledMember;
 namespace InEditor.Editor.Class.Element
 {
     /// <summary>
-    ///     It's a super class to deal fields and properties of inspector.
+    /// It's a super class to deal fields and properties of inspector.
     /// </summary>
     public partial class InEditorElement : IComparable<InEditorElement>
     {
         /// <summary>
-        ///     Deals elements hierarchy.
+        /// Deals elements hierarchy.
         /// </summary>
         private readonly ElementHierarchy hierarchy;
 
         /// <summary>
-        ///     Deals imgui drawing.
+        /// Deals imgui drawing.
         /// </summary>
         private readonly IMGUIField imgui;
 
         /// <summary>
-        ///     From the MemberInfo.
+        /// From the MemberInfo.
         /// </summary>
         private readonly InEditorAttribute inEditor;
-        
-        private InEditorElement(object rawTarget, MemberInfo member, InEditorElement parent)
+
+        private InEditorElement(object rawTarget, MemberInfo member,
+            InEditorElement parent)
         {
             member.TryGetAttribute(out inEditor);
             
-            var target = new HandledMemberTarget(rawTarget, member);
-            target.NullCheck();
-            
-            var name = inEditor.DisplayName;
-            name = string.IsNullOrEmpty(name) ? target.Name : name;
-            name = inEditor.NicifyName ? ObjectNames.NicifyVariableName(name) : name;
-            var content = new GUIContent(name);
-            
-            imgui = IMGUIField.CreateIMGUI(target, content);
-            
-            hierarchy = member.IsParentInEditorElement()
-                ? new ElementHierarchy(parent, Reflect(target.PassDown(), target.MemberType, this))
-                : new ElementHierarchy(parent, null);
+            // Not to draw custom method
+            if (!inEditor.HasCustomMethod)
+            {
+                var target = new HandledMemberTarget(rawTarget, member);
+                target.NullCheck();
+
+                var name = inEditor.DisplayName;
+                name = string.IsNullOrEmpty(name)
+                    ? target.Name
+                    : name;
+                name = inEditor.NicifyName
+                    ? ObjectNames.NicifyVariableName(name)
+                    : name;
+                var content = new GUIContent(name);
+
+                imgui = IMGUIField.CreateIMGUI(target, content, inEditor.Hint);
+
+                hierarchy = member.IsParentInEditorElement()
+                    ? new ElementHierarchy(parent,
+                        Reflect(target.PassDown(), target.MemberType, this))
+                    : new ElementHierarchy(parent, null);
+            }
+            // Draw with custom method
+            else
+            {
+                //TODO: Implement Custom Drawing Method Here
+            }
         }
 
         /// <summary>
-        ///     IComparable: Used in Sorting or Ordering in list.
+        /// IComparable: Used in Sorting or Ordering in list.
         /// </summary>
         /// <param name="other"> the compared </param>
         /// <returns> sorting clue </returns>
@@ -60,19 +75,21 @@ namespace InEditor.Editor.Class.Element
         }
 
         /// <summary>
-        ///     Creates a type's elements quickly...
+        /// Creates a type's elements quickly...
         /// </summary>
         /// <param name="target"> instance of data </param>
         /// <param name="type"> desired type </param>
         /// <param name="parent"> pass null if it's the first one </param>
         /// <returns> editor elements </returns>
-        public static IEnumerable<InEditorElement> Reflect(object target, Type type, InEditorElement parent)
+        public static IEnumerable<InEditorElement> Reflect(object target,
+            Type type, InEditorElement parent)
         {
             // this [GetMembers()] gets every MemberInfo in the [type]
             var infos = type
                 .GetMembers(
                     BindingFlags.Public | BindingFlags.NonPublic |
-                    BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                    BindingFlags.Instance | BindingFlags.Static |
+                    BindingFlags.FlattenHierarchy)
                 .Where(i => i.TryGetAttribute(out InEditorAttribute _));
 
             var members = new List<InEditorElement>();
@@ -93,19 +110,46 @@ namespace InEditor.Editor.Class.Element
         }
 
         /// <summary>
-        ///     Draws inspectors IMGUI-like
+        /// Draws <see cref="imgui"/> with fashion of <see cref="inEditor"/>
+        /// </summary>
+        private void Layout()
+        {
+            using (new EditorGUI.DisabledScope(inEditor.Disabled))
+            {
+                imgui.Layout();
+            }
+        }
+
+        /// <summary>
+        /// Draws <see cref="ElementHierarchy.relatives"/> with indents or conditions.
+        /// </summary>
+        private void LayoutRelatives()
+        {
+            EditorGUI.indentLevel++;
+            if (imgui.IsExpended && hierarchy.HasRelatives)
+            {
+                foreach (var relative in hierarchy)
+                {
+                    if (relative is null)
+                        continue;
+
+                    relative.OnInspectorGUI();
+                }
+            }
+
+            EditorGUI.indentLevel--;
+        }
+
+        /// <summary>
+        /// Draws inspectors IMGUI-like
         /// </summary>
         public void OnInspectorGUI()
         {
-            imgui.Layout();
-            
-            EditorGUI.indentLevel++;
-            
-            if (imgui.IsExpended && hierarchy.HasRelatives)
-                foreach (var relative in hierarchy)
-                    relative.OnInspectorGUI();
-            
-            EditorGUI.indentLevel--;
+            if (imgui is null)
+                return;
+
+            Layout();
+            LayoutRelatives();
         }
     }
 }

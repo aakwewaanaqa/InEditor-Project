@@ -64,7 +64,7 @@ namespace InEditor.Editor.Class.Field
             catch (Exception e)
             {
                 Debug.LogError($"{target} : {e.Message}");
-                throw;
+                return null;
             }
         }
 
@@ -73,16 +73,40 @@ namespace InEditor.Editor.Class.Field
         /// </summary>
         /// <param name="target">target to tracked</param>
         /// <param name="label">label to draw with IMGUIField</param>
+        /// <param name="hint">hints for draw style change</param>
         /// <returns></returns>
-        public static IMGUIField CreateIMGUI(HandledMemberTarget target, GUIContent label)
+        public static IMGUIField CreateIMGUI(HandledMemberTarget target,
+            GUIContent label, IMGUIDrawHintEnum hint)
         {
             var type = target.MemberType;
-            var imguiType = type.IsParentInEditorElement()
-                ? typeof(IMGUIFold)
-                : FindIMGUIType(type);
-            var imgui = target.IsMemberSerializedProperty
-                ? new IMGUIPropertyField()
-                : (IMGUIField)Activator.CreateInstance(imguiType);
+
+            IMGUIField imgui = null;
+
+            switch (hint)
+            {
+                default:
+                case IMGUIDrawHintEnum.Auto:
+                    var imguiType = type.IsParentInEditorElement()
+                        ? typeof(IMGUIFold)
+                        : FindIMGUIType(type);
+                    
+                    // Can't figure out what to draw with
+                    if (imguiType is null)
+                        return null;
+                    
+                    imgui = target.IsMemberSerializedProperty
+                        ? new IMGUIPropertyField()
+                        : (IMGUIField)Activator.CreateInstance(imguiType);
+                    break;
+                
+                case IMGUIDrawHintEnum.ToStringLabel:
+                    imgui = new IMGUILabel();
+                    break;
+                
+                case IMGUIDrawHintEnum.None:
+                    return null;
+            }
+
             imgui.Target = target;
             imgui.Label = label;
             return imgui;
