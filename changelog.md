@@ -58,3 +58,7 @@
 ### [Added] `InEditorAttribute`.`Method`
 
 - Shows `field` with pre-define custom `Editor` or `Monobehaviour` `method`.
+
+### [Fixed] Not Serialized Field of `Gradient` Crash Unity Editor
+
+- Now if `field` of `Gradient` with value of `null` will call `new Gradient()`

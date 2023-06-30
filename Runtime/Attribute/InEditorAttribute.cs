@@ -58,10 +58,10 @@ namespace InEditor
         /// </summary>
         /// <param name="order">display order, smaller first.</param>
         /// <param name="disabled">whether the field will shown as disabled</param>
-        public InEditorAttribute(int order = 0, bool disabled = false)
+        public InEditorAttribute(int order = 0, bool canEdit = true)
         {
             DisplayOrder = order;
-            Disabled = disabled;
+            Disabled = !canEdit;
         }
     }
 }

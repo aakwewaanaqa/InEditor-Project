@@ -35,12 +35,12 @@ and this will do the trick.
 
 ```C#
 using UnityEditor;
-using InEditor;
+using InEditor; // Use InEditor
 
 namespace Anyway
 {
     [CustomEditor(typeof(YourClass))]
-    public class YourClassEditor : BaseInEditor
+    public class YourClassEditor : BaseInEditor // Inherite BaseInEditor
     {
     
     }
@@ -61,7 +61,7 @@ namespace Anyway
     [CustomEditor(typeof(YourClass))]
     public class YourClassEditor : BaseInEditor
     {
-        [InEditor(1)]
+        [InEditor(1)] // Add InEditorAttribute for the field
         [SerializeField]
         private bool boolean;
     }

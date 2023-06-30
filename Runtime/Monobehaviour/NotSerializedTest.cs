@@ -32,7 +32,7 @@ namespace InEditor
         [InEditor(8)]
         public static Vector2 v2;
         
-        [InEditor(9)]
+        [InEditor(9, false)]
         public static Vector2Int v2I;
         
         [InEditor(10)]
@@ -48,12 +48,21 @@ namespace InEditor
         public static LayerMask layerMask;
         
         [InEditor(14)]
-        public static Gradient grad = new Gradient();
+        public static Gradient grad;
         
         [InEditor(15)]
         public static AnimationCurve curve;
         
         [InEditor(16)]
         public static GameObject obj;
+
+        [InEditor(17)]
+        public static ManagedClass managed;
+        
+        public class ManagedClass
+        {
+            [InEditor(0)]
+            public bool b;
+        }
     }
 }
