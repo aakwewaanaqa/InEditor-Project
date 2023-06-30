@@ -11,7 +11,7 @@ Create a `Editor` class in any folder in the Assets only its name is Editor,
 just as a normal `Editor`.
 
 ```C#
-using UnityEditor
+using UnityEditor;
 
 namespace Anyway
 {
@@ -30,8 +30,8 @@ Change where the class inheritance from `Editor` to `BaseInEditor`,
 and this will do the trick. Enjoy!
 
 ```C#
-using UnityEditor
-using InEditor
+using UnityEditor;
+using InEditor;
 
 namespace Anyway
 {
