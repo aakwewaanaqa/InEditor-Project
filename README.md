@@ -10,5 +10,5 @@ some easy steps.
 ## Wiki 
 
 - How to
-  - How to use `InEditorAttribute`
-  - [How to create a `BaseInEditor`](https://github.com/aakwewaanaqa/InEditor-Project/blob/master/Readme/How%20to%20create%20a%20BaseInEditor.md#how-to-create-a-baseineditor)
+  - [How to use `InEditorAttribute`](https://github.com/aakwewaanaqa/InEditor-Project/blob/master/Readme/How%20to%20use%20InEditorAttribute.md)
+  - [How to create a `BaseInEditor`](https://github.com/aakwewaanaqa/InEditor-Project/blob/master/Readme/How%20to%20create%20a%20BaseInEditor.md)
