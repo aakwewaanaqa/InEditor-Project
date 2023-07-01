@@ -49,8 +49,7 @@ using InEditor;
 
 namespace Anyway
 {
-    [CustomEditor(typeof(YourClass))]
-    public class YourClassEditor : BaseInEditor
+    public class YourClass : Monobehaviour
     {
         [InEditor(1)] // Add InEditorAttribute for the field
         [SerializeField]
