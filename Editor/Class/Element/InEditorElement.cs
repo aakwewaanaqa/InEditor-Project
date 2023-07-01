@@ -34,13 +34,13 @@ namespace InEditor.Editor.Class.Element
             InEditorElement parent)
         {
             member.TryGetAttribute(out inEditor);
-            
+
+            var target = new HandledMemberTarget(rawTarget, member);
+            target.NullCheck();
+
             // Not to draw custom method
             if (!inEditor.HasCustomMethod)
             {
-                var target = new HandledMemberTarget(rawTarget, member);
-                target.NullCheck();
-
                 var name = inEditor.DisplayName;
                 name = string.IsNullOrEmpty(name)
                     ? target.Name
@@ -60,7 +60,14 @@ namespace InEditor.Editor.Class.Element
             // Draw with custom method
             else
             {
-                //TODO: Implement Custom Drawing Method Here
+                var realTarget = target.GetRealTarget();
+                if (realTarget is null)
+                    return;
+
+                var targetType = realTarget.GetType();
+                var method = targetType.GetMethod(inEditor.Method);
+
+                imgui = new IMGUIMethod(method, realTarget);
             }
         }
 
@@ -114,6 +121,9 @@ namespace InEditor.Editor.Class.Element
         /// </summary>
         private void Layout()
         {
+            if (imgui is null)
+                return;
+            
             using (new EditorGUI.DisabledScope(inEditor.Disabled))
             {
                 imgui.Layout();
@@ -125,6 +135,11 @@ namespace InEditor.Editor.Class.Element
         /// </summary>
         private void LayoutRelatives()
         {
+            if (imgui is null)
+                return;
+            if (hierarchy is null)
+                return;
+            
             EditorGUI.indentLevel++;
             if (imgui.IsExpended && hierarchy.HasRelatives)
             {
@@ -145,9 +160,6 @@ namespace InEditor.Editor.Class.Element
         /// </summary>
         public void OnInspectorGUI()
         {
-            if (imgui is null)
-                return;
-
             Layout();
             LayoutRelatives();
         }

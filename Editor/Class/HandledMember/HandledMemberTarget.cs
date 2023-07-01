@@ -3,14 +3,16 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace InEditor.Editor.Class.HandledMember
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class HandledMemberTarget
     {
         /// <summary>
-        /// Handles MemberInfo whether its a FieldInfo or PropertyInfo.
+        /// Handles <see cref="MemberInfo"/> whether its a <see cref="FieldInfo"/> or <see cref="PropertyInfo"/>.
         /// </summary>
         private class HandledMemberInfo
         {
@@ -138,6 +140,9 @@ namespace InEditor.Editor.Class.HandledMember
             get { return handledMember.MemberType; }
         }
 
+        /// <summary>
+        /// The not nicify name of <see cref="MemberInfo"/>
+        /// </summary>
         public string Name
         {
             get { return handledMember.Name; }
@@ -177,19 +182,21 @@ namespace InEditor.Editor.Class.HandledMember
             }
         }
 
+        /// <summary>
+        /// Gets value by the <see cref="MemberInfo"/> to <see cref="rawTarget"/> passed in.
+        /// </summary>
+        /// <returns>returned value</returns>
         public object GetValue()
         {
-#if UNITY_2022_1_OR_NEWER
-            return IsMemberSerializedProperty
-                ? FindProperty().boxedValue
-                : handledMember.GetValue(rawTarget);
-#else
             return IsMemberSerializedProperty
                 ? GetBoxedValue(FindProperty())
                 : handledMember.GetValue(rawTarget);
-#endif
         }
 
+        /// <summary>
+        /// Sets value by the <see cref="MemberInfo"/> to <see cref="rawTarget"/> passed in.
+        /// <param name="value">value to set</param>
+        /// </summary>
         public void SetValue(object value)
         {
             if (IsMemberSerializedProperty)
@@ -198,44 +205,45 @@ namespace InEditor.Editor.Class.HandledMember
                 handledMember.SetValue(rawTarget, value);
         }
 
-        public object PassDown()
+        /// <summary>
+        /// This transform <see cref="SerializedObject"/> or <see cref="SerializedProperty"/> to real object
+        /// </summary>
+        /// <returns></returns>
+        public object GetRealTarget()
         {
-            if (IsMemberSerializedProperty)
-                return FindProperty();
-            object target;
             switch (rawTarget)
             {
                 case SerializedObject serializedObject:
-                    target = serializedObject.targetObject;
-                    break;
+                    return serializedObject.targetObject;
                 case SerializedProperty serializedProperty:
-                    target = GetBoxedValue(serializedProperty);
-                    break;
+                    return GetBoxedValue(serializedProperty);
                 default:
-                    target = rawTarget;
-                    break;
+                    return rawTarget;
             }
-
-            return handledMember.GetValue(target);
         }
 
+        /// <summary>
+        /// Gets the <see cref="rawTarget"/> for the next deeper <see cref="Element.InEditorElement"/> to ctor with.
+        /// </summary>
+        /// <returns></returns>
+        public object PassDown()
+        {
+            return IsMemberSerializedProperty 
+                ? FindProperty() 
+                : handledMember.GetValue(GetRealTarget());
+        }
+
+        /// <summary>
+        /// Checks if the true value of the target is null.
+        /// Avoid getting <see cref="NullReferenceException"/> when creating <see cref="Element.InEditorElement.ElementHierarchy.relatives"/>
+        /// </summary>
         public void NullCheck()
         {
+            // Serialized property will auto-null-check itself.
             if (IsMemberSerializedProperty)
                 return;
-            object target;
-            switch (rawTarget)
-            {
-                case SerializedObject serializedObject:
-                    target = serializedObject.targetObject;
-                    break;
-                case SerializedProperty serializedProperty:
-                    target = GetBoxedValue(serializedProperty);
-                    break;
-                default:
-                    target = rawTarget;
-                    break;
-            }
+
+            var target = GetRealTarget();
 
             if (!(handledMember.GetValue(target) is null) || IsUnityObject)
                 return;

@@ -1,6 +1,4 @@
-using UnityEngine;
 using System;
-using System.Net.Configuration;
 
 namespace InEditor
 {
@@ -57,7 +55,7 @@ namespace InEditor
         /// Usually with an order is the best to sort drawing.
         /// </summary>
         /// <param name="order">display order, smaller first.</param>
-        /// <param name="disabled">whether the field will shown as disabled</param>
+        /// <param name="canEdit">whether the field will shown as editable field</param>
         public InEditorAttribute(int order = 0, bool canEdit = true)
         {
             DisplayOrder = order;
